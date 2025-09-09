@@ -1,0 +1,12 @@
+{
+    "compile": {
+        "packages": [
+            "go"
+        ],
+        "command": "go build -o output ."
+    },
+    "execute": {
+        "command": "./output",
+        "skip_bash": true
+    }
+}

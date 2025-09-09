@@ -1,0 +1,282 @@
+package pkg
+
+import (
+	"bytes"
+	"encoding/base64"
+	"encoding/hex"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
+type Sandbox int
+
+const sandbox_base = "/var/lib/isolate"
+
+func (s Sandbox) ID() int {
+	return int(s)
+}
+
+func (s Sandbox) String() string {
+	return strconv.Itoa(s.ID())
+}
+
+func (s Sandbox) BoxPath() string {
+	return filepath.Join(sandbox_base, s.String(), "box")
+}
+
+func (s Sandbox) metadataFilePath() string {
+	return "/tmp/box" + s.String() + "-meta.txt"
+}
+
+func (s Sandbox) Init() error {
+	return exec.Command(
+		"isolate",
+		"--cg",
+		"--box-id="+s.String(),
+		"--init",
+	).Run()
+}
+
+func (s Sandbox) Cleanup() error {
+	os.RemoveAll(s.metadataFilePath())
+	return exec.Command(
+		"isolate",
+		"--cg",
+		"--box-id="+s.String(),
+		"--cleanup",
+	).Run()
+}
+
+type SandboxFile struct {
+	Name     string `json:"name" doc:"Path of the file within the sandbox" example:"hello.txt"`
+	Content  string `json:"content" doc:"Content of the file" example:"Hello World"`
+	Encoding string `json:"encoding,omitempty" doc:"Encoding of the content field" enum:"utf8,base64,hex" default:"utf8" `
+}
+
+func (s Sandbox) Mount(files []SandboxFile) error {
+	for _, file := range files {
+		if !filepath.IsLocal(file.Name) {
+			return fmt.Errorf("file %s tries to escape from sandbox", file.Name)
+		}
+	}
+
+	for _, file := range files {
+		location := filepath.Join(s.BoxPath(), file.Name)
+		err := os.MkdirAll(filepath.Dir(location), 0755)
+		if err != nil {
+			return err
+		}
+		f, err := os.Create(location)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		content := file.Content
+		switch file.Encoding {
+		case "utf8", "":
+		case "base64":
+			decoded, err := base64.StdEncoding.DecodeString(content)
+			if err != nil {
+				return err
+			}
+			content = string(decoded)
+		case "hex":
+			decoded, err := hex.DecodeString(content)
+			if err != nil {
+				return err
+			}
+			content = string(decoded)
+		default:
+			return fmt.Errorf("unknown encoding %s for file %s", file.Encoding, file.Name)
+		}
+
+		_, err = f.WriteString(content)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type SandboxPhaseMetadata struct {
+	Time     int    `json:"time" doc:"Run time of the program in milliseconds"`
+	WallTime int    `json:"wall_time" doc:"Wall time of the program in milliseconds" example:"0"`
+	Memory   int    `json:"memory" doc:"Total memory use by the whole control group in KB" example:"256"`
+	Status   string `json:"status" doc:"Two-letter status code" example:"OK"`
+	Message  string `json:"message" doc:"Human-readable message" example:"Executed"`
+	ExitCode int    `json:"exit_code" doc:"Exit code from the program" example:"0"`
+}
+
+// Helper to parse metadata file created by isolate
+func (s Sandbox) parseMetadata() (*SandboxPhaseMetadata, error) {
+	file, err := os.ReadFile(s.metadataFilePath())
+	if err != nil {
+		return nil, err
+	}
+
+	output := &SandboxPhaseMetadata{
+		Status:  "OK",
+		Message: "Executed",
+	}
+	for _, line := range strings.Split(string(file), "\n") {
+		key, value, found := strings.Cut(line, ":")
+		if !found {
+			continue
+		}
+		switch key {
+		case "status":
+			output.Status = value
+		case "message":
+			output.Message = value
+		case "time":
+			time, _ := strconv.ParseFloat(value, 64)
+			output.Time = int(time * 1000)
+		case "time-wall":
+			wallTime, _ := strconv.ParseFloat(value, 64)
+			output.WallTime = int(wallTime * 1000)
+		case "cg-mem":
+			output.Memory, _ = strconv.Atoi(value)
+		case "exitcode":
+			output.ExitCode, _ = strconv.Atoi(value)
+		}
+	}
+	return output, nil
+}
+
+type SandboxPhaseResults struct {
+	SandboxPhaseMetadata
+	Stdout string `json:"stdout" doc:"stdout of the program" example:"program output"`
+	Stderr string `json:"stderr" doc:"stderr of the program" example:""`
+}
+
+func (s Sandbox) Results() (*SandboxPhaseResults, error) {
+	stdout, err := os.ReadFile(filepath.Join(s.BoxPath(), "stdout.txt"))
+	if err != nil {
+		return nil, err
+	}
+	stderr, err := os.ReadFile(filepath.Join(s.BoxPath(), "stderr.txt"))
+	if err != nil {
+		return nil, err
+	}
+	meta, err := s.parseMetadata()
+	if err != nil {
+		return nil, err
+	}
+	return &SandboxPhaseResults{
+		SandboxPhaseMetadata: *meta,
+		Stdout:               string(bytes.TrimSpace(stdout)),
+		Stderr:               string(bytes.TrimSpace(stderr)),
+	}, nil
+}
+
+type SandboxPhase struct {
+	Command     string            `json:"command" doc:"Command to execute in the sandbox" example:"/usr/bin/cat hello.txt"`
+	SkipBash    bool              `json:"skip_bash,omitempty" doc:"Doesn't use the bash shell to run the command to if true, can be used to get more accurate results" default:"false"`
+	Packages    []string          `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"cowsay,python3Minimal"`
+	Environment map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
+}
+
+type SandboxPhaseOptions struct {
+	MemoryLimit int    `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
+	TimeLimit   int    `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
+	FilesLimit  int    `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
+	Network     bool   `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
+	Stdin       string `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" example:""`
+}
+
+func (s Sandbox) Run(
+	phase *SandboxPhase,
+	options *SandboxPhaseOptions,
+) (*SandboxPhaseResults, error) {
+	if options.Stdin != "" {
+		if err := os.WriteFile(
+			filepath.Join(s.BoxPath(), "stdin.txt"),
+			[]byte(options.Stdin),
+			0600,
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	args := []string{
+		"--pure",
+		"-p",
+	}
+	args = append(args, phase.Packages...)
+	args = append(args, "--run", buildIsolateCommand(s, phase, options))
+	cmd := exec.Command("nix-shell", args...)
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+
+	return s.Results()
+}
+
+// Helper to build isolate command string with options
+func buildIsolateCommand(
+	s Sandbox,
+	phase *SandboxPhase,
+	options *SandboxPhaseOptions,
+) string {
+
+	filesLimit := options.FilesLimit
+	if filesLimit == -1 {
+		filesLimit = 0 // 0 means no limit in isolate
+	}
+
+	command := []string{
+		"/usr/bin/isolate",
+		"--cg",
+		"-s",
+		"--stdout=/box/stdout.txt",
+		"--stderr=/box/stderr.txt",
+		"--meta=" + s.metadataFilePath(),
+		"--dir=/nix=/nix",
+		"--dir=/etc:noexec",
+		"--box-id=" + s.String(),
+		"--open-files=" + strconv.Itoa(filesLimit),
+		"-e",
+		"--env=HOME=/tmp",
+	}
+
+	for key, value := range phase.Environment {
+		command = append(command, fmt.Sprintf("--env=%s=%s", key, value))
+	}
+
+	if options.Stdin != "" {
+		command = append(command, "--stdin=/box/stdin.txt")
+	}
+
+	if options.TimeLimit != -1 {
+		command = append(command,
+			"--time="+strconv.FormatFloat(float64(options.TimeLimit)/1000, 'f', 3, 64),
+		)
+	}
+
+	if options.MemoryLimit != -1 {
+		command = append(command,
+			"--cg-mem="+strconv.Itoa(options.MemoryLimit),
+		)
+	}
+
+	if options.Network {
+		command = append(command, "--share-net")
+	}
+
+	command = append(command, "--run", "--")
+	if phase.SkipBash {
+		command = append(command, phase.Command)
+	} else {
+		command = append(command, "/bin/bash", "-c", strconv.Quote(phase.Command))
+	}
+
+	output := strings.Join(command, " ")
+
+	return output
+}

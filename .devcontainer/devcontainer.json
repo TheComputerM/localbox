@@ -1,0 +1,27 @@
+{
+	"name": "LocalBox",
+	"build": {
+		"context": ".",
+		"dockerfile": "Dockerfile.dev"
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/nix:1": {}
+	},
+	"runArgs": [
+		"--privileged",
+		"--cgroupns=host"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go"
+			]
+		}
+	},
+	"portsAttributes": {
+		"9000": {
+			"label": "LocalBox API",
+			"onAutoForward": "notify"
+		}
+	}
+}
