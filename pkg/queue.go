@@ -28,10 +28,12 @@ func (p *SandboxPool) InitCGroup() error {
 	return cmd.Run()
 }
 
-func (p *SandboxPool) Acquire() Sandbox {
+func (p *SandboxPool) Acquire() (Sandbox, error) {
 	sandbox := <-p.sandboxes
-	sandbox.Init()
-	return sandbox
+	if err := sandbox.Init(); err != nil {
+		return -1, err
+	}
+	return sandbox, nil
 }
 
 func (p *SandboxPool) Release(s Sandbox) error {

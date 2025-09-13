@@ -24,13 +24,16 @@ type ExecuteResponse struct {
 }
 
 func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, error) {
-	sandbox := internal.SandboxPool.Acquire()
+	sandbox, err := internal.SandboxPool.Acquire()
+	if err != nil {
+		return nil, err
+	}
 
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err
 	}
-	results := make([]*pkg.SandboxPhaseResults, len(input.Body.Phases))
 
+	results := make([]*pkg.SandboxPhaseResults, len(input.Body.Phases))
 	for i, phase := range input.Body.Phases {
 		result, err := sandbox.Run(&phase.SandboxPhase, &phase.SandboxPhaseOptions)
 		if err != nil {
@@ -39,7 +42,7 @@ func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, erro
 		results[i] = result
 	}
 
-	if err := sandbox.Cleanup(); err != nil {
+	if err := internal.SandboxPool.Release(sandbox); err != nil {
 		return nil, err
 	}
 
@@ -71,8 +74,10 @@ func ExecuteWithEngine(
 		return nil, err
 	}
 
-	sandbox := internal.SandboxPool.Acquire()
-	defer internal.SandboxPool.Release(sandbox)
+	sandbox, err := internal.SandboxPool.Acquire()
+	if err != nil {
+		return nil, err
+	}
 
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err
@@ -88,11 +93,15 @@ func ExecuteWithEngine(
 		output.Body.Compile = result
 	}
 
-	result, err := sandbox.Run(engine.Execute, &input.Body.Execute)
+	result, err := sandbox.Run(&engine.Execute, &input.Body.Execute)
 	if err != nil {
 		return nil, err
 	}
 	output.Body.Execute = result
+
+	if err := internal.SandboxPool.Release(sandbox); err != nil {
+		return nil, err
+	}
 
 	return output, nil
 }
