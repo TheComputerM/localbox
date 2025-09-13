@@ -1,9 +1,7 @@
 {
     "compile": {
-        "packages": [
-            "go"
-        ],
-        "command": "go build -o output main.go"
+        "packages": ["go"],
+        "command": "GOCACHE=$PWD go build -o output main.go"
     },
     "execute": {
         "command": "./output",
