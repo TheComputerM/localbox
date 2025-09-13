@@ -59,8 +59,8 @@ func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, erro
 type ExecuteWithEngineRequest struct {
 	Engine string `path:"engine"`
 	Body   struct {
-		Execute pkg.SandboxPhaseOptions `json:"execute"`
-		Files   []pkg.SandboxFile       `json:"files"`
+		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox"`
+		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
 	}
 }
 
@@ -86,8 +86,12 @@ func ExecuteWithEngine(
 		return nil, err
 	}
 
-	output, err := engine.Run(sandbox, &input.Body.Execute)
+	output, err := engine.Run(sandbox, &input.Body.Options)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := internal.SandboxPool.Release(sandbox); err != nil {
 		return nil, err
 	}
 
