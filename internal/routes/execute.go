@@ -57,7 +57,7 @@ func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, erro
 }
 
 type ExecuteWithEngineRequest struct {
-	Engine string `path:"engine"`
+	Engine string `path:"engine" example:"python"`
 	Body   struct {
 		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox"`
 		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`

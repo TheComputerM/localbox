@@ -15,6 +15,7 @@ import (
 
 type Sandbox int
 
+// directory path where the sandboxes are stored, specified in isolate.conf
 const sandbox_base = "/var/lib/isolate"
 
 func (s Sandbox) ID() int {
@@ -106,8 +107,8 @@ func (s Sandbox) Mount(files []SandboxFile) error {
 }
 
 type SandboxPhaseMetadata struct {
-	Time     int    `json:"time" doc:"Run time of the program in milliseconds"`
-	WallTime int    `json:"wall_time" doc:"Wall time of the program in milliseconds" example:"0"`
+	Time     int    `json:"time" doc:"Run time of the program in milliseconds" example:"500"`
+	WallTime int    `json:"wall_time" doc:"Wall time of the program in milliseconds" example:"1000"`
 	Memory   int    `json:"memory" doc:"Total memory use by the whole control group in KB" example:"256"`
 	Status   string `json:"status" doc:"Two-letter status code" example:"OK"`
 	Message  string `json:"message" doc:"Human-readable message" example:"Executed"`
@@ -192,6 +193,7 @@ type SandboxPhaseOptions struct {
 	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
 }
 
+// Run a SandboxPhase with it's options inside the sandbox
 func (s Sandbox) Run(
 	phase *SandboxPhase,
 	options *SandboxPhaseOptions,
@@ -243,7 +245,7 @@ func buildIsolateCommand(
 		"--dir=/etc:noexec",
 		"--box-id=" + s.String(),
 		"--open-files=" + strconv.Itoa(filesLimit),
-		"--processes=10",
+		"--processes=" + strconv.Itoa(options.ProcessLimit),
 		"-e",
 		"--env=HOME=/tmp",
 	}
@@ -285,10 +287,11 @@ func buildIsolateCommand(
 }
 
 type SandboxPrepare struct {
-	Command  string   `json:"command" doc:"Command executed **outside the sandbox**" example:"go build main.go"`
-	Packages []string `json:"packages,omitempty" doc:"Nix packages to install" example:"go"`
+	Command  string   `json:"command" doc:"Command executed to prepare the sandbox, it is executed on the host machine, **outside the sandbox**" example:"go build main.go"`
+	Packages []string `json:"packages,omitempty" doc:"Nix packages available during this phase" example:"go"`
 }
 
+// Run a preparation command to setup the sandbox environment
 func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
 	args := []string{"--pure", "-p"}
 	args = append(args, prepare.Packages...)
