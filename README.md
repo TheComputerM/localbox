@@ -21,3 +21,37 @@ Both of these projects have some *issues* which did not fit my usecase, namely:
 3. In Judge0
     - Only supports outdated linux cgroups v1, you will have to change kernel options in any machine with a recent linux kernel.
     - Cannot take multiple files as input.
+
+## Getting Started
+
+
+## Example
+
+```json
+// Request Body
+{
+  "options": {
+    "stdin": "hello world"
+  },
+  "files": [
+    {
+      "content": "print(input())",
+      "encoding": "utf8",
+      "name": "main.py"
+    }
+  ]
+}
+
+// Response
+{
+  "$schema": "http://localhost:9000/schemas/SandboxPhaseResults.json",
+  "time": 20,
+  "wall_time": 42,
+  "memory": 4076,
+  "status": "OK",
+  "message": "Executed",
+  "exit_code": 0,
+  "stdout": "hello world",
+  "stderr": ""
+}
+```
