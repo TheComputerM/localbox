@@ -11,17 +11,11 @@ import (
 	"github.com/danielgtaylor/huma/v2/humacli"
 	"github.com/labstack/echo/v4"
 	"github.com/thecomputerm/localbox/internal/routes"
-	"github.com/thecomputerm/localbox/pkg"
 )
 
 type Options struct {
 	Port int `help:"Port to listen on" short:"p" default:"9000"`
 }
-
-var EngineManager = pkg.EngineManager{
-	Index: "/workspaces/localbox/engines",
-}
-var SandboxPool = pkg.NewSandboxPool(10)
 
 func main() {
 	if os.Getuid() != 0 {
