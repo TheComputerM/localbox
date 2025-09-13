@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
@@ -22,6 +24,10 @@ var EngineManager = pkg.EngineManager{
 var SandboxPool = pkg.NewSandboxPool(10)
 
 func main() {
+	if os.Getuid() != 0 {
+		log.Fatal("LocalBox must be run as root")
+	}
+
 	huma.DefaultArrayNullable = false
 	cli := humacli.New(func(h humacli.Hooks, o *Options) {
 		e := echo.New()
