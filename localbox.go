@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
@@ -18,10 +16,6 @@ type Options struct {
 }
 
 func main() {
-	if os.Getuid() != 0 {
-		log.Fatal("LocalBox must be run as root")
-	}
-
 	huma.DefaultArrayNullable = false
 	cli := humacli.New(func(h humacli.Hooks, o *Options) {
 		e := echo.New()
