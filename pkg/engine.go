@@ -7,8 +7,8 @@ import (
 )
 
 type Engine struct {
-	Compile *SandboxPhase `json:"compile" required:"false"`
-	Execute *SandboxPhase `json:"execute"`
+	Compile *SandboxPrepare `json:"compile,omitempty" required:"false"`
+	Execute *SandboxPhase   `json:"execute"`
 }
 
 type EngineManager struct {
@@ -50,4 +50,19 @@ func (m *EngineManager) List() ([]string, error) {
 	}
 
 	return engines, nil
+}
+
+func (e *Engine) Run(s Sandbox, options *SandboxPhaseOptions) (*SandboxPhaseResults, error) {
+	if e.Compile != nil {
+		if err := s.Prepare(e.Compile); err != nil {
+			return nil, err
+		}
+	}
+
+	result, err := s.Run(e.Execute, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

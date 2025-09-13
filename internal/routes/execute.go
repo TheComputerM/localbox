@@ -14,8 +14,9 @@ type ExecutePhase struct {
 
 type ExecuteRequest struct {
 	Body struct {
-		Phases []ExecutePhase    `json:"phases"`
-		Files  []pkg.SandboxFile `json:"files"`
+		Prepare []pkg.SandboxPrepare `json:"prepare,omitempty" doc:"Preparation steps to run before execution"`
+		Phases  []ExecutePhase       `json:"phases" doc:"Execution phases to run sequentially in the sandbox"`
+		Files   []pkg.SandboxFile    `json:"files" doc:"Files to mount in the sandbox before execution"`
 	}
 }
 
@@ -31,6 +32,12 @@ func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, erro
 
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err
+	}
+
+	for _, prep := range input.Body.Prepare {
+		if err := sandbox.Prepare(&prep); err != nil {
+			return nil, err
+		}
 	}
 
 	results := make([]*pkg.SandboxPhaseResults, len(input.Body.Phases))
@@ -52,17 +59,13 @@ func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, erro
 type ExecuteWithEngineRequest struct {
 	Engine string `path:"engine"`
 	Body   struct {
-		Compile pkg.SandboxPhaseOptions `json:"compile,omitempty"`
 		Execute pkg.SandboxPhaseOptions `json:"execute"`
 		Files   []pkg.SandboxFile       `json:"files"`
 	}
 }
 
 type ExecuteWithEngineResponse struct {
-	Body struct {
-		Compile *pkg.SandboxPhaseResults `json:"compile,omitempty"`
-		Execute *pkg.SandboxPhaseResults `json:"execute"`
-	}
+	Body *pkg.SandboxPhaseResults
 }
 
 func ExecuteWithEngine(
@@ -83,25 +86,10 @@ func ExecuteWithEngine(
 		return nil, err
 	}
 
-	output := &ExecuteWithEngineResponse{}
-
-	if engine.Compile != nil {
-		result, err := sandbox.Run(engine.Compile, &input.Body.Compile)
-		if err != nil {
-			return nil, err
-		}
-		output.Body.Compile = result
-	}
-
-	result, err := sandbox.Run(&engine.Execute, &input.Body.Execute)
+	output, err := engine.Run(sandbox, &input.Body.Execute)
 	if err != nil {
 		return nil, err
 	}
-	output.Body.Execute = result
 
-	if err := internal.SandboxPool.Release(sandbox); err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return &ExecuteWithEngineResponse{Body: output}, nil
 }

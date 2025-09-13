@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -82,13 +83,13 @@ func (s Sandbox) Mount(files []SandboxFile) error {
 		case "base64":
 			decoded, err := base64.StdEncoding.DecodeString(content)
 			if err != nil {
-				return err
+				return errors.Join(fmt.Errorf("could not decode content for %s as %s", file.Name, file.Encoding), err)
 			}
 			content = string(decoded)
 		case "hex":
 			decoded, err := hex.DecodeString(content)
 			if err != nil {
-				return err
+				return errors.Join(fmt.Errorf("could not decode content for %s as %s", file.Name, file.Encoding), err)
 			}
 			content = string(decoded)
 		default:
@@ -176,18 +177,19 @@ func (s Sandbox) Results() (*SandboxPhaseResults, error) {
 }
 
 type SandboxPhase struct {
-	Command     string            `json:"command" doc:"Command to execute in the sandbox" example:"/usr/bin/cat hello.txt"`
-	SkipBash    bool              `json:"skip_bash,omitempty" doc:"Doesn't use the bash shell to run the command to if true, can be used to get more accurate results" default:"false"`
-	Packages    []string          `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"cowsay,python3Minimal"`
-	Environment map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
+	Command  string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
+	SkipBash bool     `json:"skip_bash,omitempty" doc:"Doesn't use the bash shell to run the command to if true, can be used to get more accurate results" default:"false"`
+	Packages []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"cowsay,python3Minimal"`
 }
 
 type SandboxPhaseOptions struct {
-	MemoryLimit int    `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
-	TimeLimit   int    `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
-	FilesLimit  int    `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
-	Network     bool   `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
-	Stdin       string `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" example:""`
+	MemoryLimit  int               `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
+	TimeLimit    int               `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
+	FilesLimit   int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
+	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"16"`
+	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
+	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" example:""`
+	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
 }
 
 func (s Sandbox) Run(
@@ -212,7 +214,7 @@ func (s Sandbox) Run(
 	args = append(args, "--run", buildIsolateCommand(s, phase, options))
 	cmd := exec.Command("nix-shell", args...)
 	if err := cmd.Run(); err != nil {
-		return nil, err
+		return nil, errors.Join(fmt.Errorf("failed to run sandbox"), err)
 	}
 
 	return s.Results()
@@ -241,11 +243,12 @@ func buildIsolateCommand(
 		"--dir=/etc:noexec",
 		"--box-id=" + s.String(),
 		"--open-files=" + strconv.Itoa(filesLimit),
+		"--processes=10",
 		"-e",
 		"--env=HOME=/tmp",
 	}
 
-	for key, value := range phase.Environment {
+	for key, value := range options.Environment {
 		command = append(command, fmt.Sprintf("--env=%s=%s", key, value))
 	}
 
@@ -279,4 +282,22 @@ func buildIsolateCommand(
 	output := strings.Join(command, " ")
 
 	return output
+}
+
+type SandboxPrepare struct {
+	Command  string   `json:"command" doc:"Command executed **outside the sandbox**" example:"go build main.go"`
+	Packages []string `json:"packages,omitempty" doc:"Nix packages to install" example:"go"`
+}
+
+func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
+	args := []string{"--pure", "-p"}
+	args = append(args, prepare.Packages...)
+	args = append(args, "--run", "bash -c "+strconv.Quote(prepare.Command))
+	cmd := exec.Command("nix-shell", args...)
+	cmd.Dir = s.BoxPath()
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return errors.Join(fmt.Errorf("failed to prepare sandbox: %s", string(output)), err)
+	}
+	return nil
 }
