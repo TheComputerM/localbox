@@ -3,7 +3,7 @@
         "packages": [
             "go"
         ],
-        "command": "go build -o output ."
+        "command": "go build -o output main.go"
     },
     "execute": {
         "command": "./output",
