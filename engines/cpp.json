@@ -1,0 +1,10 @@
+{
+    "compile": {
+        "packages": ["gcc"],
+        "command": "g++ *.cpp"
+    },
+    "execute": {
+        "command": "./a.out",
+        "skip_bash": true
+    }
+}
