@@ -15,6 +15,9 @@ import (
 
 type Sandbox int
 
+const isolate_bin = "/usr/local/bin/isolate"
+const bash_bin = "/usr/local/bin/bash"
+
 // directory path where the sandboxes are stored, specified in isolate.conf
 const sandbox_base = "/var/lib/isolate"
 
@@ -36,7 +39,7 @@ func (s Sandbox) metadataFilePath() string {
 
 func (s Sandbox) Init() error {
 	return exec.Command(
-		"isolate",
+		isolate_bin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--init",
@@ -46,7 +49,7 @@ func (s Sandbox) Init() error {
 func (s Sandbox) Cleanup() error {
 	os.RemoveAll(s.metadataFilePath())
 	return exec.Command(
-		"isolate",
+		isolate_bin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--cleanup",
@@ -235,7 +238,7 @@ func buildIsolateCommand(
 	}
 
 	command := []string{
-		"/usr/bin/isolate",
+		isolate_bin,
 		"--cg",
 		"-s",
 		"--stdout=/box/stdout.txt",
@@ -278,7 +281,7 @@ func buildIsolateCommand(
 	if phase.SkipBash {
 		command = append(command, phase.Command)
 	} else {
-		command = append(command, "/bin/bash", "-c", strconv.Quote(phase.Command))
+		command = append(command, bash_bin, "-c", strconv.Quote(phase.Command))
 	}
 
 	output := strings.Join(command, " ")
@@ -295,7 +298,7 @@ type SandboxPrepare struct {
 func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
 	args := []string{"--pure", "-p"}
 	args = append(args, prepare.Packages...)
-	args = append(args, "--run", "bash -c "+strconv.Quote(prepare.Command))
+	args = append(args, "--run", bash_bin+" -c "+strconv.Quote(prepare.Command))
 	cmd := exec.Command("nix-shell", args...)
 	cmd.Dir = s.BoxPath()
 
