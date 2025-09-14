@@ -21,13 +21,14 @@
         formatter = pkgs.nixpkgs-fmt;
         packages = {
           localbox = pkgs.buildGoModule {
+            env.CGO_ENABLED = 0;
             name = "localbox";
             src = self;
             goSum = ./go.sum;
             vendorHash = "sha256-5JK5tXVwioeH4yD1MCKI7UnxMjKdIwrNZ4kiDDDaVYQ=";
             checkFlags = [ "-skip" ];
           };
-          default = localbox;
+          default = packages.localbox;
         };
       }
     );
