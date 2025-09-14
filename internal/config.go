@@ -5,7 +5,7 @@ import (
 )
 
 type LocalboxConfig struct {
-	Port       int    `help:"Port to listen on" short:"p" default:"9000"`
+	Port       int    `help:"Port to listen on" short:"p" default:"2000"`
 	EngineRoot string `help:"Path where engine definitions are stored" default:"/workspaces/localbox/engines"`
 	PoolSize   int    `help:"Total number of sandboxes that can be used concurrently" default:"10"`
 }
