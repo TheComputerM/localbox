@@ -1,23 +1,26 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 	"github.com/danielgtaylor/huma/v2/humacli"
 	"github.com/labstack/echo/v4"
+	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/internal/routes"
 )
 
-type Options struct {
-	Port int `help:"Port to listen on" short:"p" default:"9000"`
-}
-
 func main() {
 	huma.DefaultArrayNullable = false
-	cli := humacli.New(func(h humacli.Hooks, o *Options) {
+	cli := humacli.New(func(h humacli.Hooks, o *internal.LocalboxConfig) {
+		if err := internal.SetupLocalbox(o); err != nil {
+			log.Fatal(err)
+		}
+
 		e := echo.New()
 		config := huma.DefaultConfig("LocalBox", "1.0.0")
 		config.Info.Description = `LocalBox is a **easy-to-host**, **general purpose** 
@@ -31,7 +34,9 @@ func main() {
 			Path:        "/system",
 			Summary:     "System Info",
 			Description: `Get system information and configuration data.`,
-		}, routes.GetSystemInfo)
+		}, func(ctx context.Context, _ *struct{}) (*routes.SystemInfoResponse, error) {
+			return routes.GetSystemInfo(ctx, o)
+		})
 
 		huma.Register(app, huma.Operation{
 			OperationID: "list-engines",
