@@ -26,6 +26,14 @@ func main() {
 		app := humaecho.New(e, config)
 
 		huma.Register(app, huma.Operation{
+			OperationID: "system-info",
+			Method:      http.MethodGet,
+			Path:        "/system",
+			Summary:     "System Info",
+			Description: `Get system information and configuration data.`,
+		}, routes.GetSystemInfo)
+
+		huma.Register(app, huma.Operation{
 			OperationID: "list-engines",
 			Method:      http.MethodGet,
 			Summary:     "List Engines",

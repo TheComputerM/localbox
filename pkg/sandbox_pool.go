@@ -1,31 +1,7 @@
 package pkg
 
-import (
-	"errors"
-	"os"
-	"path/filepath"
-)
-
 type SandboxPool struct {
 	sandboxes chan Sandbox
-}
-
-func (p *SandboxPool) InitCGroup() error {
-	cgroups := "/sys/fs/cgroup"
-	name := "isolate"
-
-	if info, err := os.Stat(filepath.Join(cgroups, name)); !errors.Is(err, os.ErrNotExist) && info.IsDir() {
-		return nil
-	}
-
-	if err := os.Mkdir(filepath.Join(cgroups, name), 0755); err != nil {
-		return err
-	}
-
-	if err := os.WriteFile(filepath.Join(cgroups, name, "cgroup.subtree_control"), []byte("+cpuset +memory"), 0644); err != nil {
-		return err
-	}
-	return nil
 }
 
 func NewSandboxPool(size int) *SandboxPool {
@@ -38,6 +14,7 @@ func NewSandboxPool(size int) *SandboxPool {
 	return pool
 }
 
+// Gets a new sandbox from the pool and initializes it
 func (p *SandboxPool) Acquire() (Sandbox, error) {
 	sandbox := <-p.sandboxes
 	if err := sandbox.Init(); err != nil {
@@ -46,10 +23,20 @@ func (p *SandboxPool) Acquire() (Sandbox, error) {
 	return sandbox, nil
 }
 
+// Cleans up the sandbox and returns it to the pool
 func (p *SandboxPool) Release(s Sandbox) error {
 	if err := s.Cleanup(); err != nil {
 		return err
 	}
 	p.sandboxes <- s
 	return nil
+}
+
+// Number of available sandboxes
+func (p *SandboxPool) Available() int {
+	return len(p.sandboxes)
+}
+
+func (p *SandboxPool) Capacity() int {
+	return cap(p.sandboxes)
 }
