@@ -1,18 +1,25 @@
 {
 	"name": "LocalBox",
-	"build": {
-		"context": ".",
-		"dockerfile": "Dockerfile.dev"
-	},
+	"image": "mcr.microsoft.com/devcontainers/go:1.24-trixie",
 	"features": {
 		"ghcr.io/devcontainers/features/nix:1": {
 			"extraNixConfig": "experimental-features = nix-command flakes"
 		}
 	},
+	"privileged": true,
 	"runArgs": [
-		"--privileged",
 		"--cgroupns=host"
 	],
+	"mounts": [
+		{
+			"source": "${localWorkspaceFolder}/isolate.conf",
+			"target": "/etc/isolate",
+			"type": "bind"
+		}
+	],
+	"containerEnv": {
+		"SERVICE_ENGINE_ROOT": "${containerWorkspaceFolder}/engines"
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
