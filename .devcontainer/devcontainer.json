@@ -5,7 +5,9 @@
 		"dockerfile": "Dockerfile.dev"
 	},
 	"features": {
-		"ghcr.io/devcontainers/features/nix:1": {}
+		"ghcr.io/devcontainers/features/nix:1": {
+			"extraNixConfig": "experimental-features = nix-command flakes"
+		}
 	},
 	"runArgs": [
 		"--privileged",
@@ -14,7 +16,8 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"golang.go"
+				"golang.go",
+				"jnoortheen.nix-ide"
 			]
 		}
 	},
