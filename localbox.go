@@ -10,6 +10,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 	"github.com/danielgtaylor/huma/v2/humacli"
 	"github.com/labstack/echo/v4"
+	_ "github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/internal/routes"
 	"github.com/thecomputerm/localbox/pkg"
 )

@@ -10,7 +10,7 @@ import (
 
 func initCGroup() error {
 	cgroups := "/sys/fs/cgroup"
-	name := "isolate"
+	name := "localbox"
 
 	if info, err := os.Stat(filepath.Join(cgroups, name)); !errors.Is(err, os.ErrNotExist) && info.IsDir() {
 		return nil

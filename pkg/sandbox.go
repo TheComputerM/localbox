@@ -15,10 +15,10 @@ import (
 
 type Sandbox int
 
-const bash_bin = "/usr/local/bin/bash"
+var bash_bin = os.Getenv("SHELL")
 
 // directory path where the sandboxes are stored, specified in isolate.conf
-const sandbox_base = "/var/lib/isolate"
+const sandbox_base = "/var/lib/localbox"
 
 func (s Sandbox) ID() int {
 	return int(s)
@@ -37,22 +37,28 @@ func (s Sandbox) metadataFilePath() string {
 }
 
 func (s Sandbox) Init() error {
-	return exec.Command(
+	if err := exec.Command(
 		Globals.IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--init",
-	).Run()
+	).Run(); err != nil {
+		return errors.Join(fmt.Errorf("could not init sandbox %d", s.ID()), err)
+	}
+	return nil
 }
 
 func (s Sandbox) Cleanup() error {
 	os.RemoveAll(s.metadataFilePath())
-	return exec.Command(
+	if err := exec.Command(
 		Globals.IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--cleanup",
-	).Run()
+	).Run(); err != nil {
+		return errors.Join(fmt.Errorf("could not cleanup sandbox %d", s.ID()), err)
+	}
+	return nil
 }
 
 type SandboxFile struct {
