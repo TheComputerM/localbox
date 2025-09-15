@@ -47,20 +47,20 @@ func main() {
 		}, routes.ListEngines)
 
 		huma.Register(app, huma.Operation{
+			OperationID: "run-engine",
+			Method:      http.MethodPost,
+			Path:        "/engine/{engine}",
+			Summary:     "Run Engine",
+			Description: `Execute a predefined engine with an execution phase whose options can be overriden.`,
+		}, routes.ExecuteWithEngine)
+
+		huma.Register(app, huma.Operation{
 			OperationID: "execute",
 			Method:      http.MethodPost,
 			Path:        "/execute",
 			Summary:     "Execute",
-			Description: `Execute a series of phases, where each of them can have different options, packages and commands with persistent files.`,
+			Description: `Execute a series of phases, where each of them can have different options, packages and commands with persistent files. Use this for more complicated workflows.`,
 		}, routes.Execute)
-
-		huma.Register(app, huma.Operation{
-			OperationID: "execute-engine",
-			Method:      http.MethodPost,
-			Path:        "/execute/{engine}",
-			Summary:     "Execute Engine",
-			Description: `Execute a predefined engine that has execute and (an optional) compile phase whose options can be overriden.`,
-		}, routes.ExecuteWithEngine)
 
 		h.OnStart(func() {
 			e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", o.Port)))

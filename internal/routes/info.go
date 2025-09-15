@@ -8,7 +8,7 @@ import (
 
 type SystemInfoResponse struct {
 	Body struct {
-		Configuration *internal.LocalboxConfig `json:"configuration"`
+		Configuration *internal.LocalboxConfig `json:"configuration" doc:"Variables with which localbox was configured"`
 	}
 }
 

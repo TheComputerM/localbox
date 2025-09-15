@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/thecomputerm/localbox/internal"
+	"github.com/thecomputerm/localbox/pkg"
 )
 
 type ListEnginesResponse struct {
@@ -19,4 +20,43 @@ func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error)
 	return &ListEnginesResponse{
 		Body: engines,
 	}, nil
+}
+
+type ExecuteWithEngineRequest struct {
+	Engine string `path:"engine" example:"python"`
+	Body   struct {
+		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox"`
+		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
+	}
+}
+
+type ExecuteWithEngineResponse struct {
+	Body *pkg.SandboxPhaseResults
+}
+
+func ExecuteWithEngine(
+	ctx context.Context,
+	input *ExecuteWithEngineRequest,
+) (*ExecuteWithEngineResponse, error) {
+	engine, err := internal.EngineManager.Get(input.Engine)
+	if err != nil {
+		return nil, err
+	}
+
+	sandbox, err := internal.SandboxPool.Acquire()
+	if err != nil {
+		return nil, err
+	}
+	defer internal.SandboxPool.Release(sandbox)
+
+	if err := sandbox.Mount(input.Body.Files); err != nil {
+		return nil, err
+	}
+
+	output, err := engine.Run(sandbox, &input.Body.Options)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ExecuteWithEngineResponse{Body: output}, nil
 }
