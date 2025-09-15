@@ -6,4 +6,3 @@ RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/isolate.asc] http://www.uc
     rm -rf /var/lib/apt/lists/*
 
 RUN ln -s /usr/bin/isolate /usr/local/bin/isolate
-RUN ln -s /usr/bin/bash /usr/local/bin/bash
