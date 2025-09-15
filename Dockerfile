@@ -13,7 +13,8 @@ RUN cp -R $(nix-store -qR /output/profile) /output/store
 FROM base
 # Copy over the Nix store and profile from the build stage
 COPY --from=build /output/store /nix/store
-COPY --from=build /output/profile/ /usr/local/
+COPY --from=build /output/profile/bin /usr/local/bin
+COPY --from=build /output/profile/lib /usr/local/lib
 
 COPY ./engines /lib/localbox/engines
 COPY ./isolate.conf /etc/isolate
