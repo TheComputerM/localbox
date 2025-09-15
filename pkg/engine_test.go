@@ -52,7 +52,8 @@ func TestEngines(t *testing.T) {
 		return files
 	}
 
-	engines := []string{"go", "python", "cpp"}
+	engines, err := pkg.Globals.EngineManager.List()
+	require.NoError(t, err)
 	require.Greater(t, len(engines), 0)
 	sandbox := pkg.Sandbox(0)
 
