@@ -213,13 +213,15 @@ func (s Sandbox) Run(
 
 	args := []string{
 		"--pure",
+		"--keep",
+		"ISOLATE_CONFIG_FILE",
 		"-p",
 	}
 	args = append(args, phase.Packages...)
 	args = append(args, "--run", buildIsolateCommand(s, phase, options))
 	cmd := exec.Command("nix-shell", args...)
-	if err := cmd.Run(); err != nil {
-		return nil, errors.Join(fmt.Errorf("failed to run sandbox"), err)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return nil, errors.Join(fmt.Errorf("failed to run sandbox: %s", output), err)
 	}
 
 	return s.Results()
