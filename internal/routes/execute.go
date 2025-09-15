@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 
-	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/pkg"
 )
 
@@ -25,11 +24,11 @@ type ExecuteResponse struct {
 }
 
 func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, error) {
-	sandbox, err := internal.SandboxPool.Acquire()
+	sandbox, err := pkg.Globals.SandboxPool.Acquire()
 	if err != nil {
 		return nil, err
 	}
-	defer internal.SandboxPool.Release(sandbox)
+	defer pkg.Globals.SandboxPool.Release(sandbox)
 
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err

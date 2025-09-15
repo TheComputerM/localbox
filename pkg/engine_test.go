@@ -9,16 +9,19 @@ import (
 	"github.com/thecomputerm/localbox/pkg"
 )
 
-func getTestEngineManager() *pkg.EngineManager {
-	return &pkg.EngineManager{
-		Index: "/workspaces/localbox/engines",
+func init() {
+	options := &pkg.LocalboxConfig{
+		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
+		PoolSize:   1,
+		IsolateBin: "/usr/local/bin/isolate",
+	}
+	if err := pkg.SetupLocalbox(options); err != nil {
+		panic(err)
 	}
 }
 
 func TestGetEngine(t *testing.T) {
-	manager := getTestEngineManager()
-
-	engine, err := manager.Get("python")
+	engine, err := pkg.Globals.EngineManager.Get("python")
 	require.NoError(t, err)
 	require.NotNil(t, engine)
 }
@@ -49,14 +52,12 @@ func TestEngines(t *testing.T) {
 		return files
 	}
 
-	manager := getTestEngineManager()
-	engines, err := manager.List()
-	require.NoError(t, err)
+	engines := []string{"go", "python", "cpp"}
 	require.Greater(t, len(engines), 0)
 	sandbox := pkg.Sandbox(0)
 
 	for _, engineName := range engines {
-		engine, err := manager.Get(engineName)
+		engine, err := pkg.Globals.EngineManager.Get(engineName)
 		require.NoError(t, err)
 		t.Run(engineName, func(t *testing.T) {
 			require.NoError(t, sandbox.Init())

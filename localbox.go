@@ -10,14 +10,14 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 	"github.com/danielgtaylor/huma/v2/humacli"
 	"github.com/labstack/echo/v4"
-	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/internal/routes"
+	"github.com/thecomputerm/localbox/pkg"
 )
 
 func main() {
 	huma.DefaultArrayNullable = false
-	cli := humacli.New(func(h humacli.Hooks, o *internal.LocalboxConfig) {
-		if err := internal.SetupLocalbox(o); err != nil {
+	cli := humacli.New(func(h humacli.Hooks, o *pkg.LocalboxConfig) {
+		if err := pkg.SetupLocalbox(o); err != nil {
 			log.Fatal(err)
 		}
 

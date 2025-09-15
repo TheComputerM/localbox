@@ -15,7 +15,6 @@ import (
 
 type Sandbox int
 
-const isolate_bin = "/usr/local/bin/isolate"
 const bash_bin = "/usr/local/bin/bash"
 
 // directory path where the sandboxes are stored, specified in isolate.conf
@@ -39,7 +38,7 @@ func (s Sandbox) metadataFilePath() string {
 
 func (s Sandbox) Init() error {
 	return exec.Command(
-		isolate_bin,
+		Globals.IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--init",
@@ -49,7 +48,7 @@ func (s Sandbox) Init() error {
 func (s Sandbox) Cleanup() error {
 	os.RemoveAll(s.metadataFilePath())
 	return exec.Command(
-		isolate_bin,
+		Globals.IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--cleanup",
@@ -240,7 +239,7 @@ func buildIsolateCommand(
 	}
 
 	command := []string{
-		isolate_bin,
+		Globals.IsolateBin,
 		"--cg",
 		"-s",
 		"--stdout=/box/stdout.txt",

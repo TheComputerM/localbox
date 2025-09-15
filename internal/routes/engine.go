@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 
-	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/pkg"
 )
 
@@ -12,7 +11,7 @@ type ListEnginesResponse struct {
 }
 
 func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error) {
-	engines, err := internal.EngineManager.List()
+	engines, err := pkg.Globals.EngineManager.List()
 	if err != nil {
 		return nil, err
 	}
@@ -38,16 +37,16 @@ func ExecuteWithEngine(
 	ctx context.Context,
 	input *ExecuteWithEngineRequest,
 ) (*ExecuteWithEngineResponse, error) {
-	engine, err := internal.EngineManager.Get(input.Engine)
+	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
 	if err != nil {
 		return nil, err
 	}
 
-	sandbox, err := internal.SandboxPool.Acquire()
+	sandbox, err := pkg.Globals.SandboxPool.Acquire()
 	if err != nil {
 		return nil, err
 	}
-	defer internal.SandboxPool.Release(sandbox)
+	defer pkg.Globals.SandboxPool.Release(sandbox)
 
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err
