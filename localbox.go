@@ -2,18 +2,29 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humaecho"
 	"github.com/danielgtaylor/huma/v2/humacli"
 	"github.com/labstack/echo/v4"
-	_ "github.com/thecomputerm/localbox/internal"
+	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/internal/routes"
 	"github.com/thecomputerm/localbox/pkg"
 )
+
+func init() {
+	if os.Getuid() != 0 {
+		log.Fatal("LocalBox must be run as root")
+	}
+	if err := internal.InitCGroup(); err != nil {
+		log.Fatal(errors.Join(fmt.Errorf("couldn't init cgroup"), err))
+	}
+}
 
 func main() {
 	huma.DefaultArrayNullable = false
