@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"errors"
-	"os/exec"
+	"os"
 )
 
 type LocalboxConfig struct {
@@ -26,12 +26,11 @@ func SetupLocalbox(options *LocalboxConfig) error {
 		EngineManager: &EngineManager{Index: options.EngineRoot},
 		SandboxPool:   NewSandboxPool(options.PoolSize),
 		IsolateBin:    options.IsolateBin,
+		ShellBin:      os.Getenv("SHELL"),
 	}
 
-	if shell, err := exec.LookPath("sh"); err != nil {
-		return errors.Join(errors.New("couldn't find sh binary in PATH"), err)
-	} else {
-		Globals.ShellBin = shell
+	if Globals.ShellBin == "" {
+		return errors.New("SHELL environment variable is not set")
 	}
 
 	return nil
