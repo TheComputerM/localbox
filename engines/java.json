@@ -4,7 +4,8 @@
         "command": "javac main.java"
     },
     "execute": {
+        "packages": ["jdk24_headless"],
         "command": "java main",
-        "skip_bash": false
+        "skip_shell": false
     }
 }

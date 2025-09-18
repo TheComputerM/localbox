@@ -186,9 +186,9 @@ func (s Sandbox) Results() (*SandboxPhaseResults, error) {
 }
 
 type SandboxPhase struct {
-	Command  string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
-	SkipBash bool     `json:"skip_bash,omitempty" doc:"Doesn't use the bash shell to run the command to if true, can be used to get more accurate results" default:"false"`
-	Packages []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"cowsay,python3Minimal"`
+	Command   string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
+	SkipShell bool     `json:"skip_shell,omitempty" doc:"Doesn't use a shell to run the command to if true, can be used to get more accurate results" default:"false"`
+	Packages  []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"cowsay,python3Minimal"`
 }
 
 type SandboxPhaseOptions struct {
@@ -285,7 +285,7 @@ func buildIsolateCommand(
 	}
 
 	command = append(command, "--run", "--")
-	if phase.SkipBash {
+	if phase.SkipShell {
 		command = append(command, phase.Command)
 	} else {
 		command = append(command, bash_bin, "-c", strconv.Quote(phase.Command))

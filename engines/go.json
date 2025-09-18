@@ -5,6 +5,6 @@
     },
     "execute": {
         "command": "./output",
-        "skip_bash": true
+        "skip_shell": true
     }
 }
