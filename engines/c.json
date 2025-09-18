@@ -1,0 +1,10 @@
+{
+    "compile": {
+        "packages": ["gcc"],
+        "command": "gcc *.c"
+    },
+    "execute": {
+        "command": "./a.out",
+        "skip_shell": true
+    }
+}
