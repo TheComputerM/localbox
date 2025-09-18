@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -11,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/thecomputerm/localbox/internal/utils"
 )
 
 type Sandbox int
@@ -163,26 +164,6 @@ type SandboxPhaseResults struct {
 	Stderr string `json:"stderr" doc:"stderr of the program" example:""`
 }
 
-func (s Sandbox) Results() (*SandboxPhaseResults, error) {
-	stdout, err := os.ReadFile(filepath.Join(s.BoxPath(), "stdout.txt"))
-	if err != nil {
-		return nil, err
-	}
-	stderr, err := os.ReadFile(filepath.Join(s.BoxPath(), "stderr.txt"))
-	if err != nil {
-		return nil, err
-	}
-	meta, err := s.parseMetadata()
-	if err != nil {
-		return nil, err
-	}
-	return &SandboxPhaseResults{
-		SandboxPhaseMetadata: *meta,
-		Stdout:               string(bytes.TrimSpace(stdout)),
-		Stderr:               string(bytes.TrimSpace(stderr)),
-	}, nil
-}
-
 type SandboxPhase struct {
 	Command   string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
 	SkipShell bool     `json:"skip_shell,omitempty" doc:"Doesn't use a shell to run the command to if true, can be used to get more accurate results" default:"false"`
@@ -195,7 +176,8 @@ type SandboxPhaseOptions struct {
 	FilesLimit   int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
 	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
 	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
-	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" example:""`
+	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" default:""`
+	BufferLimit  int               `json:"buffer_limit,omitempty" doc:"Maximum kilobytes to capture from stdout and stderr" default:"64"`
 	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
 }
 
@@ -215,6 +197,7 @@ func (s Sandbox) Run(
 	}
 
 	args := []string{
+		"--quiet",
 		"--pure",
 		"--keep",
 		"ISOLATE_CONFIG_FILE",
@@ -223,11 +206,30 @@ func (s Sandbox) Run(
 	args = append(args, phase.Packages...)
 	args = append(args, "--run", buildIsolateCommand(s, phase, options))
 	cmd := exec.Command("nix-shell", args...)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return nil, errors.Join(fmt.Errorf("failed to run sandbox: %s", output), err)
+
+	stdout := utils.NewLimitedWriter(options.BufferLimit)
+	cmd.Stdout = stdout
+
+	stderr := utils.NewLimitedWriter(options.BufferLimit)
+	cmd.Stderr = stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, errors.Join(fmt.Errorf("sandbox error: %s", cmd.String()), errors.New(stderr.String()), err)
 	}
 
-	return s.Results()
+	results := &SandboxPhaseResults{
+		Stdout: stdout.String(),
+		Stderr: stderr.String(),
+	}
+
+	meta, err := s.parseMetadata()
+	if err != nil {
+		return nil, err
+	}
+
+	results.SandboxPhaseMetadata = *meta
+
+	return results, nil
 }
 
 // Helper to build isolate command string with options
@@ -246,11 +248,9 @@ func buildIsolateCommand(
 		Globals.IsolateBin,
 		"--cg",
 		"-s",
-		"--stdout=/box/stdout.txt",
-		"--stderr=/box/stderr.txt",
 		"--meta=" + s.metadataFilePath(),
 		"--dir=/nix=/nix",
-		"--dir=/etc:noexec",
+		"--dir=/etc=/etc:noexec",
 		"--box-id=" + s.String(),
 		"--open-files=" + strconv.Itoa(filesLimit),
 		"--processes=" + strconv.Itoa(options.ProcessLimit),
@@ -301,7 +301,7 @@ type SandboxPrepare struct {
 
 // Run a preparation command to setup the sandbox environment
 func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
-	args := []string{"--pure", "-p"}
+	args := []string{"--quiet", "--pure", "-p"}
 	args = append(args, prepare.Packages...)
 	args = append(args, "--run", Globals.ShellBin+" -c "+strconv.Quote(prepare.Command))
 	cmd := exec.Command("nix-shell", args...)
