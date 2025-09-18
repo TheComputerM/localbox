@@ -15,8 +15,6 @@ import (
 
 type Sandbox int
 
-var bash_bin = os.Getenv("SHELL")
-
 // directory path where the sandboxes are stored, specified in isolate.conf
 const sandbox_base = "/var/lib/localbox"
 
@@ -195,7 +193,7 @@ type SandboxPhaseOptions struct {
 	MemoryLimit  int               `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
 	TimeLimit    int               `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
 	FilesLimit   int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
-	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"16"`
+	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
 	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
 	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" example:""`
 	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
@@ -288,7 +286,7 @@ func buildIsolateCommand(
 	if phase.SkipShell {
 		command = append(command, phase.Command)
 	} else {
-		command = append(command, bash_bin, "-c", strconv.Quote(phase.Command))
+		command = append(command, Globals.ShellBin, "-c", strconv.Quote(phase.Command))
 	}
 
 	output := strings.Join(command, " ")
@@ -305,7 +303,7 @@ type SandboxPrepare struct {
 func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
 	args := []string{"--pure", "-p"}
 	args = append(args, prepare.Packages...)
-	args = append(args, "--run", bash_bin+" -c "+strconv.Quote(prepare.Command))
+	args = append(args, "--run", Globals.ShellBin+" -c "+strconv.Quote(prepare.Command))
 	cmd := exec.Command("nix-shell", args...)
 	cmd.Dir = s.BoxPath()
 
