@@ -1,10 +1,13 @@
 {
     "compile": {
-        "packages": ["gcc"],
+        "packages": ["nixpkgs/nixos-25.05#gcc15"],
         "command": "gcc *.c"
     },
     "execute": {
         "command": "./a.out",
         "skip_shell": true
+    },
+    "meta": {
+        "version": "15.1.0"
     }
 }

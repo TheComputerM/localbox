@@ -18,7 +18,6 @@
         pkgs = import nixpkgs { inherit system; };
       in
       rec {
-        formatter = pkgs.nixpkgs-fmt;
         packages = {
           localbox = pkgs.buildGoModule {
             env.CGO_ENABLED = 0;
@@ -28,6 +27,7 @@
             vendorHash = "sha256-3Nc+epzEpRJMXCuP9XkA8ZvIyW6ch1OsxxtfShlkkBI=";
             checkFlags = [ "-skip" ];
           };
+          isolate = pkgs.isolate;
           default = packages.localbox;
         };
       }

@@ -167,7 +167,7 @@ type SandboxPhaseResults struct {
 type SandboxPhase struct {
 	Command   string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
 	SkipShell bool     `json:"skip_shell,omitempty" doc:"Doesn't use a shell to run the command to if true, can be used to get more accurate results" default:"false"`
-	Packages  []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"cowsay,python3Minimal"`
+	Packages  []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"nixpkgs#cowsay,nixpkgs/nixos-25.05#python3Minimal"`
 }
 
 type SandboxPhaseOptions struct {
@@ -197,7 +197,7 @@ func (s Sandbox) Run(
 	}
 
 	args := buildNixShell(phase.Packages, buildIsolateCommand(s, phase, options))
-	cmd := exec.Command("nix-shell", args...)
+	cmd := exec.Command("nix", args...)
 
 	stdout := utils.NewLimitedWriter(options.BufferLimit)
 	cmd.Stdout = stdout
@@ -224,10 +224,11 @@ func (s Sandbox) Run(
 	return results, nil
 }
 
-func buildNixShell(packages []string, run string) []string {
-	args := []string{"--quiet", "--pure", "--keep", "ISOLATE_CONFIG_FILE", "-p"}
+func buildNixShell(packages, run []string) []string {
+	args := []string{"shell", "--quiet", "-i", "-k", "ISOLATE_CONFIG_FILE"}
 	args = append(args, packages...)
-	args = append(args, "--run", run)
+	args = append(args, "--command")
+	args = append(args, run...)
 	return args
 }
 
@@ -236,7 +237,7 @@ func buildIsolateCommand(
 	s Sandbox,
 	phase *SandboxPhase,
 	options *SandboxPhaseOptions,
-) string {
+) []string {
 
 	filesLimit := options.FilesLimit
 	if filesLimit == -1 {
@@ -285,12 +286,10 @@ func buildIsolateCommand(
 	if phase.SkipShell {
 		command = append(command, phase.Command)
 	} else {
-		command = append(command, Globals.ShellBin, "-c", strconv.Quote(phase.Command))
+		command = append(command, Globals.ShellBin, "-c", phase.Command)
 	}
 
-	output := strings.Join(command, " ")
-
-	return output
+	return command
 }
 
 type SandboxPrepare struct {
@@ -300,8 +299,8 @@ type SandboxPrepare struct {
 
 // Run a preparation command to setup the sandbox environment
 func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
-	args := buildNixShell(prepare.Packages, Globals.ShellBin+" -c "+strconv.Quote(prepare.Command))
-	cmd := exec.Command("nix-shell", args...)
+	args := buildNixShell(prepare.Packages, []string{Globals.ShellBin, "-c", prepare.Command})
+	cmd := exec.Command("nix", args...)
 	cmd.Dir = s.BoxPath()
 
 	if output, err := cmd.CombinedOutput(); err != nil {

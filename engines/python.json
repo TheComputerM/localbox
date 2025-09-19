@@ -1,8 +1,9 @@
 {
     "execute": {
-        "packages": [
-            "python3Minimal"
-        ],
+        "packages": ["nixpkgs/nixos-25.05#python3Minimal"],
         "command": "python3 main.py"
+    },
+    "meta": {
+        "version": "3.12.11"
     }
 }

@@ -57,7 +57,7 @@ func TestEngines(t *testing.T) {
 	require.Greater(t, len(engines), 0)
 	sandbox := pkg.Sandbox(0)
 
-	for _, engineName := range engines {
+	for engineName := range engines {
 		engine, err := pkg.Globals.EngineManager.Get(engineName)
 		require.NoError(t, err)
 		t.Run(engineName, func(t *testing.T) {

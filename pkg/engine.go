@@ -6,9 +6,14 @@ import (
 	"path"
 )
 
+type EngineMetadata struct {
+	Version string `json:"version"`
+}
+
 type Engine struct {
 	Compile *SandboxPrepare `json:"compile,omitempty" required:"false"`
 	Execute *SandboxPhase   `json:"execute"`
+	Meta    *EngineMetadata `json:"meta"`
 }
 
 type EngineManager struct {
@@ -31,13 +36,13 @@ func (m *EngineManager) Get(name string) (*Engine, error) {
 	return &engine, nil
 }
 
-func (m *EngineManager) List() ([]string, error) {
+func (m *EngineManager) List() (map[string]EngineMetadata, error) {
 	entries, err := os.ReadDir(m.Index)
 	if err != nil {
 		return nil, err
 	}
 
-	engines := make([]string, 0, len(entries))
+	engines := make(map[string]EngineMetadata, len(entries))
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -46,7 +51,12 @@ func (m *EngineManager) List() ([]string, error) {
 		if path.Ext(name) != ".json" {
 			continue
 		}
-		engines = append(engines, name[:len(name)-len(".json")])
+		name = name[:len(name)-len(".json")]
+		engine, err := m.Get(name)
+		if err != nil {
+			return nil, err
+		}
+		engines[name] = *engine.Meta
 	}
 
 	return engines, nil

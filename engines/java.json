@@ -1,11 +1,14 @@
 {
     "compile": {
-        "packages": ["jdk24_headless"],
+        "packages": ["nixpkgs/nixos-25.05#jdk24_headless"],
         "command": "javac main.java"
     },
     "execute": {
-        "packages": ["jdk24_headless"],
+        "packages": ["nixpkgs/nixos-25.05#jdk24_headless"],
         "command": "java main",
         "skip_shell": false
+    },
+    "meta": {
+        "version": "24.0.1"
     }
 }

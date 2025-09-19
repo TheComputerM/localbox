@@ -7,7 +7,7 @@ import (
 )
 
 type ListEnginesResponse struct {
-	Body []string `example:"[\"python\", \"go\",\"node\", \"...rest of the engines\"]"`
+	Body map[string]pkg.EngineMetadata `example:"{\"python\": {\"version\": \"3.12.11\"}, \"go\": {\"version\": \"1.23.12\"}}"`
 }
 
 func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error) {
