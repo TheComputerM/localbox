@@ -196,15 +196,7 @@ func (s Sandbox) Run(
 		}
 	}
 
-	args := []string{
-		"--quiet",
-		"--pure",
-		"--keep",
-		"ISOLATE_CONFIG_FILE",
-		"-p",
-	}
-	args = append(args, phase.Packages...)
-	args = append(args, "--run", buildIsolateCommand(s, phase, options))
+	args := buildNixShell(phase.Packages, buildIsolateCommand(s, phase, options))
 	cmd := exec.Command("nix-shell", args...)
 
 	stdout := utils.NewLimitedWriter(options.BufferLimit)
@@ -230,6 +222,13 @@ func (s Sandbox) Run(
 	results.SandboxPhaseMetadata = *meta
 
 	return results, nil
+}
+
+func buildNixShell(packages []string, run string) []string {
+	args := []string{"--quiet", "--pure", "--keep", "ISOLATE_CONFIG_FILE", "-p"}
+	args = append(args, packages...)
+	args = append(args, "--run", run)
+	return args
 }
 
 // Helper to build isolate command string with options
@@ -301,9 +300,7 @@ type SandboxPrepare struct {
 
 // Run a preparation command to setup the sandbox environment
 func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
-	args := []string{"--quiet", "--pure", "-p"}
-	args = append(args, prepare.Packages...)
-	args = append(args, "--run", Globals.ShellBin+" -c "+strconv.Quote(prepare.Command))
+	args := buildNixShell(prepare.Packages, Globals.ShellBin+" -c "+strconv.Quote(prepare.Command))
 	cmd := exec.Command("nix-shell", args...)
 	cmd.Dir = s.BoxPath()
 
