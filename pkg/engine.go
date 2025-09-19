@@ -11,7 +11,7 @@ type EngineMetadata struct {
 }
 
 type Engine struct {
-	Compile *SandboxPrepare `json:"compile,omitempty" required:"false"`
+	Compile *SandboxPhase   `json:"compile,omitempty"`
 	Execute *SandboxPhase   `json:"execute"`
 	Meta    *EngineMetadata `json:"meta"`
 }
@@ -62,9 +62,20 @@ func (m *EngineManager) List() (map[string]EngineMetadata, error) {
 	return engines, nil
 }
 
+// Default compile options for engines
+var engineCompileOptions = &SandboxPhaseOptions{
+	MemoryLimit:  -1,
+	TimeLimit:    30000,
+	FilesLimit:   256,
+	ProcessLimit: 256,
+	Network:      false,
+	Stdin:        "",
+	BufferLimit:  64,
+}
+
 func (e *Engine) Run(s Sandbox, options *SandboxPhaseOptions) (*SandboxPhaseResults, error) {
 	if e.Compile != nil {
-		if err := s.Prepare(e.Compile); err != nil {
+		if _, err := s.Run(e.Compile, engineCompileOptions); err != nil {
 			return nil, err
 		}
 	}

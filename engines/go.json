@@ -1,7 +1,7 @@
 {
     "compile": {
         "packages": ["nixpkgs/nixos-25.05#go"],
-        "command": "GOCACHE=$PWD go build -o output main.go"
+        "command": "GOCACHE=/box go build -o output main.go"
     },
     "execute": {
         "command": "./output",

@@ -13,9 +13,8 @@ type ExecutePhase struct {
 
 type ExecuteRequest struct {
 	Body struct {
-		Prepare []pkg.SandboxPrepare `json:"prepare,omitempty" doc:"Preparation steps to run before execution"`
-		Phases  []ExecutePhase       `json:"phases" doc:"Execution phases to run sequentially in the sandbox"`
-		Files   []pkg.SandboxFile    `json:"files" doc:"Files to mount in the sandbox before execution"`
+		Phases []ExecutePhase    `json:"phases" doc:"Execution phases to run sequentially in the sandbox"`
+		Files  []pkg.SandboxFile `json:"files" doc:"Files to mount in the sandbox before execution"`
 	}
 }
 
@@ -32,12 +31,6 @@ func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, erro
 
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err
-	}
-
-	for _, prep := range input.Body.Prepare {
-		if err := sandbox.Prepare(&prep); err != nil {
-			return nil, err
-		}
 	}
 
 	results := make([]*pkg.SandboxPhaseResults, len(input.Body.Phases))

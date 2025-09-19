@@ -167,7 +167,7 @@ type SandboxPhaseResults struct {
 type SandboxPhase struct {
 	Command   string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
 	SkipShell bool     `json:"skip_shell,omitempty" doc:"Doesn't use a shell to run the command to if true, can be used to get more accurate results" default:"false"`
-	Packages  []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"nixpkgs#cowsay,nixpkgs/nixos-25.05#python3Minimal"`
+	Packages  []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"nixpkgs#cowsay,nixpkgs/nixos-25.05#busybox"`
 }
 
 type SandboxPhaseOptions struct {
@@ -290,21 +290,4 @@ func buildIsolateCommand(
 	}
 
 	return command
-}
-
-type SandboxPrepare struct {
-	Command  string   `json:"command" doc:"Command executed to prepare the sandbox, it is executed on the host machine, **outside the sandbox**" example:"go build main.go"`
-	Packages []string `json:"packages,omitempty" doc:"Nix packages available during this phase" example:"go"`
-}
-
-// Run a preparation command to setup the sandbox environment
-func (s Sandbox) Prepare(prepare *SandboxPrepare) error {
-	args := buildNixShell(prepare.Packages, []string{Globals.ShellBin, "-c", prepare.Command})
-	cmd := exec.Command("nix", args...)
-	cmd.Dir = s.BoxPath()
-
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return errors.Join(fmt.Errorf("failed to prepare sandbox: %s", string(output)), err)
-	}
-	return nil
 }
