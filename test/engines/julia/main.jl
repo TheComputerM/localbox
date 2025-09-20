@@ -1,0 +1,1 @@
+print(read(stdin, String))
