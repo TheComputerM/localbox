@@ -177,7 +177,7 @@ type SandboxPhaseOptions struct {
 	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
 	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
 	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" default:""`
-	BufferLimit  int               `json:"buffer_limit,omitempty" doc:"Maximum kilobytes to capture from stdout and stderr" default:"64"`
+	BufferLimit  int               `json:"buffer_limit,omitempty" doc:"Maximum kilobytes to capture from stdout and stderr" default:"8"`
 	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
 }
 

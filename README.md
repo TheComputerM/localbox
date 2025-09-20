@@ -1,10 +1,7 @@
-# LocalBox
-
-**WIP: Work in Progress**
-
-## What?
-
-LocalBox is a **easy-to-host**, **general purpose** and **fast** code execution system for running **untrusted** code in sandboxes.
+<div style="text-align:center">
+  <h1>LocalBox</h1>
+  <p>An <b>easy-to-host</b>, <b>general purpose</b> and <b>fast</b> code execution system for running <b>untrusted</b> code in sandboxes.</p>
+</div>
 
 ## Why?
 
@@ -37,6 +34,34 @@ docker run --rm -it --privileged --cgroupns=host -p 2000:2000 localbox
 
 You can visit http://localhost:2000/docs to get the full API documentation.
 
+![API Docs](./assets/api.png)
+
+
+Here are the options you can provide the sandbox with to configure it:
+
+```go
+type SandboxPhaseOptions struct {
+	MemoryLimit  int               `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
+	TimeLimit    int               `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
+	FilesLimit   int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
+	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
+	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
+	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" default:""`
+	BufferLimit  int               `json:"buffer_limit,omitempty" doc:"Maximum kilobytes to capture from stdout and stderr" default:"8"`
+	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
+}
+```
+
+And here are the options you have to define to mount files in the sandbox
+
+```go
+type SandboxFile struct {
+	Name     string `json:"name" doc:"Path of the file within the sandbox" example:"hello.txt"`
+	Content  string `json:"content" doc:"Content of the file" example:"Hello World"`
+	Encoding string `json:"encoding,omitempty" doc:"Encoding of the content field" enum:"utf8,base64,hex" default:"utf8" `
+}
+```
+
 ### Using an Engine
 
 `GET /engines`: List all the available engines.
@@ -55,7 +80,7 @@ Here is a [list of available languages/runtimes](./engines/) packaged as engines
     {
       "content": "print(input())",
       "encoding": "utf8",
-      "name": "@"
+      "name": "@" // use "@" to denote that this file is the main executable for the engine
     }
   ]
 }
@@ -74,17 +99,65 @@ Here is a [list of available languages/runtimes](./engines/) packaged as engines
 }
 ```
 
-Here are the options you can provide the sandbox with:
+### Custom workflow
+
+Instead of using a predefined engine, you can go the full custom route by specifying your own packages, commands and options for each phase.
 
 ```go
-type SandboxPhaseOptions struct {
-	MemoryLimit  int               `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
-	TimeLimit    int               `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
-	FilesLimit   int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
-	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
-	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
-	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" default:""`
-	BufferLimit  int               `json:"buffer_limit,omitempty" doc:"Maximum kilobytes to capture from stdout and stderr" default:"64"`
-	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
+type SandboxPhase struct {
+	Command   string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
+	SkipShell bool     `json:"skip_shell,omitempty" doc:"Doesn't use a shell to run the command to if true, can be used to get more accurate results" default:"false"`
+	Packages  []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"nixpkgs#cowsay,nixpkgs/nixos-25.05#busybox"`
 }
 ```
+
+`POST /execute`: Execute a series of phases, where each of them can have different options, packages and commands with persistent files.
+
+```jsonc
+// Request Body
+{
+  "files": [
+    {
+      "content": "Hello World",
+      "encoding": "utf8",
+      "name": "hello.txt"
+    }
+  ],
+  "phases": [
+    {
+      "buffer_limit": 8,
+      "command": "cat hello.txt",
+      "environment": {},
+      "files_limit": 64,
+      "memory_limit": -1,
+      "network": false,
+      "packages": [
+        "nixpkgs#cowsay",
+        "nixpkgs/nixos-25.05#busybox"
+      ],
+      "process_limit": 64,
+      "skip_shell": false,
+      "stdin": "string",
+      "time_limit": 5000
+    }
+  ]
+}
+
+// Response Body
+[
+  {
+    "time": 4,
+    "wall_time": 14,
+    "memory": 500,
+    "status": "OK",
+    "message": "Executed",
+    "exit_code": 0,
+    "stdout": "Hello World",
+    "stderr": ""
+  }
+]
+```
+
+## Security
+
+As both localbox and piston use isolate, they both make use of Linux namespaces, chroot, multiple unprivileged users, and cgroup for sandboxing and resource limiting; thereby providing [similar battle-tested security](https://github.com/engineer-man/piston/tree/master?tab=readme-ov-file#security).
