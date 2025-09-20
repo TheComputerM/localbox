@@ -1,15 +1,20 @@
 package pkg_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/pkg"
 )
 
 func init() {
+	if err := internal.InitCGroup(); err != nil {
+		panic(errors.Join(errors.New("failed to init cgroup"), err))
+	}
 	options := &pkg.LocalboxConfig{
 		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
 		PoolSize:   1,
