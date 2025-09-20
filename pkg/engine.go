@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,20 +25,28 @@ type Engine struct {
 	Meta    *EngineMetadata `json:"meta"`
 }
 
-func (e *Engine) isInstalled() bool {
+func (e *Engine) packages() []string {
 	packages := e.Execute.Packages
 	if e.Compile != nil {
 		packages = append(packages, e.Compile.Packages...)
 	}
-
 	slices.Sort(packages)
+	return slices.Compact(packages)
+}
+
+func (e *Engine) isInstalled() bool {
 	args := []string{"path-info"}
-	args = append(args, slices.Compact(packages)...)
+	args = append(args, e.packages()...)
 	cmd := exec.Command("nix", args...)
-	if err := cmd.Run(); err != nil {
-		return false
-	}
-	return true
+	return cmd.Run() == nil
+}
+
+func (e *Engine) Install() bool {
+	args := []string{"shell"}
+	args = append(args, e.packages()...)
+	args = append(args, "-c", "true")
+	cmd := exec.Command("nix", args...)
+	return cmd.Run() == nil
 }
 
 func (e *Engine) Info() *EngineInfo {
@@ -81,7 +90,7 @@ type EngineManager struct {
 func (m *EngineManager) Get(name string) (*Engine, error) {
 	content, err := os.ReadFile(path.Join(m.Index, name+".json"))
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(fmt.Errorf("engine %s not found", name), err)
 	}
 
 	var engine Engine

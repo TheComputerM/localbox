@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/thecomputerm/localbox/pkg"
 )
@@ -21,7 +22,7 @@ func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error)
 	}, nil
 }
 
-type EngineInfoRequest struct {
+type EngineRequest struct {
 	Engine string `path:"engine" example:"python"`
 }
 
@@ -29,12 +30,23 @@ type EngineInfoResponse struct {
 	Body *pkg.EngineInfo `example:"{\"version\": \"3.12.11\", \"installed\": true}"`
 }
 
-func EngineInfo(ctx context.Context, input *EngineInfoRequest) (*EngineInfoResponse, error) {
+func EngineInfo(ctx context.Context, input *EngineRequest) (*EngineInfoResponse, error) {
 	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
 	if err != nil {
 		return nil, err
 	}
 	return &EngineInfoResponse{Body: engine.Info()}, nil
+}
+
+func InstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, error) {
+	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
+	if err != nil {
+		return nil, err
+	}
+	if !engine.Install() {
+		return nil, fmt.Errorf("failed to install %s engine", input.Engine)
+	}
+	return nil, nil
 }
 
 type ExecuteWithEngineRequest struct {

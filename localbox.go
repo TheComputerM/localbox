@@ -53,9 +53,10 @@ func main() {
 		huma.Register(app, huma.Operation{
 			OperationID: "list-engines",
 			Method:      http.MethodGet,
-			Summary:     "List Engines",
+			Summary:     "List all Engines",
 			Path:        "/engines",
 			Description: `List all the available engines.`,
+			Tags:        []string{"Engine"},
 		}, routes.ListEngines)
 
 		huma.Register(app, huma.Operation{
@@ -63,8 +64,18 @@ func main() {
 			Method:      http.MethodGet,
 			Path:        "/engine/{engine}",
 			Summary:     "Engine Info",
-			Description: `Get information about a specific engine.`,
+			Description: `Get information about the specified engine.`,
+			Tags:        []string{"Engine"},
 		}, routes.EngineInfo)
+
+		huma.Register(app, huma.Operation{
+			OperationID: "install-engine",
+			Method:      http.MethodPost,
+			Path:        "/engine/{engine}/install",
+			Summary:     "Install Engine",
+			Description: `Install the specified engine.`,
+			Tags:        []string{"Engine"},
+		}, routes.InstallEngine)
 
 		huma.Register(app, huma.Operation{
 			OperationID: "run-engine",
@@ -72,6 +83,7 @@ func main() {
 			Path:        "/engine/{engine}",
 			Summary:     "Run Engine",
 			Description: `Execute a predefined engine with an execution phase whose options can be overriden.`,
+			Tags:        []string{"Engine"},
 		}, routes.ExecuteWithEngine)
 
 		huma.Register(app, huma.Operation{
