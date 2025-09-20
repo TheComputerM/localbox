@@ -2,64 +2,49 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"os/exec"
 	"path"
+	"slices"
 )
 
 type EngineMetadata struct {
 	Version string `json:"version"`
 }
 
+type EngineInfo struct {
+	EngineMetadata
+	Installed bool `json:"installed" doc:"If the packages used by the engine are installed"`
+}
+
 type Engine struct {
-	Compile *SandboxPhase   `json:"compile,omitempty"`
+	Compile *SandboxPhase   `json:"compile"`
 	Execute *SandboxPhase   `json:"execute"`
 	Meta    *EngineMetadata `json:"meta"`
 }
 
-type EngineManager struct {
-	// Path to predefined engine definitions
-	Index string
+func (e *Engine) isInstalled() bool {
+	packages := e.Execute.Packages
+	if e.Compile != nil {
+		packages = append(packages, e.Compile.Packages...)
+	}
+
+	slices.Sort(packages)
+	args := []string{"path-info"}
+	args = append(args, slices.Compact(packages)...)
+	cmd := exec.Command("nix", args...)
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+	return true
 }
 
-func (m *EngineManager) Get(name string) (*Engine, error) {
-	content, err := os.ReadFile(path.Join(m.Index, name+".json"))
-	if err != nil {
-		return nil, err
+func (e *Engine) Info() *EngineInfo {
+	return &EngineInfo{
+		EngineMetadata: *e.Meta,
+		Installed:      e.isInstalled(),
 	}
-
-	var engine Engine
-	err = json.Unmarshal(content, &engine)
-	if err != nil {
-		return nil, err
-	}
-
-	return &engine, nil
-}
-
-func (m *EngineManager) List() (map[string]EngineMetadata, error) {
-	entries, err := os.ReadDir(m.Index)
-	if err != nil {
-		return nil, err
-	}
-
-	engines := make(map[string]EngineMetadata, len(entries))
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		name := entry.Name()
-		if path.Ext(name) != ".json" {
-			continue
-		}
-		name = name[:len(name)-len(".json")]
-		engine, err := m.Get(name)
-		if err != nil {
-			return nil, err
-		}
-		engines[name] = *engine.Meta
-	}
-
-	return engines, nil
 }
 
 // Default compile options for engines
@@ -86,4 +71,54 @@ func (e *Engine) Run(s Sandbox, options *SandboxPhaseOptions) (*SandboxPhaseResu
 	}
 
 	return result, nil
+}
+
+type EngineManager struct {
+	// Path to predefined engine definitions
+	Index string
+}
+
+func (m *EngineManager) Get(name string) (*Engine, error) {
+	content, err := os.ReadFile(path.Join(m.Index, name+".json"))
+	if err != nil {
+		return nil, err
+	}
+
+	var engine Engine
+	err = json.Unmarshal(content, &engine)
+	if err != nil {
+		return nil, err
+	}
+
+	if engine.Execute == nil {
+		return nil, fmt.Errorf("%s engine doesn't have a execute field", name)
+	}
+
+	return &engine, nil
+}
+
+func (m *EngineManager) List() (map[string]*EngineInfo, error) {
+	entries, err := os.ReadDir(m.Index)
+	if err != nil {
+		return nil, err
+	}
+
+	engines := make(map[string]*EngineInfo, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if path.Ext(name) != ".json" {
+			continue
+		}
+		name = name[:len(name)-len(".json")]
+		engine, err := m.Get(name)
+		if err != nil {
+			return nil, err
+		}
+		engines[name] = engine.Info()
+	}
+
+	return engines, nil
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type ListEnginesResponse struct {
-	Body map[string]pkg.EngineMetadata `example:"{\"python\": {\"version\": \"3.12.11\"}, \"go\": {\"version\": \"1.23.12\"}}"`
+	Body map[string]*pkg.EngineInfo `example:"{\"python\": {\"version\": \"3.12.11\", \"installed\": true}}"`
 }
 
 func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error) {
@@ -19,6 +19,22 @@ func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error)
 	return &ListEnginesResponse{
 		Body: engines,
 	}, nil
+}
+
+type EngineInfoRequest struct {
+	Engine string `path:"engine" example:"python"`
+}
+
+type EngineInfoResponse struct {
+	Body *pkg.EngineInfo `example:"{\"version\": \"3.12.11\", \"installed\": true}"`
+}
+
+func EngineInfo(ctx context.Context, input *EngineInfoRequest) (*EngineInfoResponse, error) {
+	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
+	if err != nil {
+		return nil, err
+	}
+	return &EngineInfoResponse{Body: engine.Info()}, nil
 }
 
 type ExecuteWithEngineRequest struct {

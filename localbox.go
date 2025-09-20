@@ -59,6 +59,14 @@ func main() {
 		}, routes.ListEngines)
 
 		huma.Register(app, huma.Operation{
+			OperationID: "engine-info",
+			Method:      http.MethodGet,
+			Path:        "/engine/{engine}",
+			Summary:     "Engine Info",
+			Description: `Get information about a specific engine.`,
+		}, routes.EngineInfo)
+
+		huma.Register(app, huma.Operation{
 			OperationID: "run-engine",
 			Method:      http.MethodPost,
 			Path:        "/engine/{engine}",
