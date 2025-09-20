@@ -11,13 +11,13 @@ import (
 )
 
 type EngineMetadata struct {
-	RunFile string `json:"run_file" doc:"Name of main file that is executed by the engine"`
-	Version string `json:"version"`
+	RunFile string `json:"run_file" doc:"Name of main file that is executed by the engine h" example:"main.py"`
+	Version string `json:"version" doc:"Version of the runtime or compiler used by the engine" example:"3.12.11"`
 }
 
 type EngineInfo struct {
 	EngineMetadata
-	Installed bool `json:"installed" doc:"Whether the packages used by the engine are installed"`
+	Installed bool `json:"installed" doc:"Whether the packages used by the engine are installed" example:"false"`
 }
 
 type Engine struct {

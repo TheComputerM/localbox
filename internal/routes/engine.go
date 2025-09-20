@@ -8,7 +8,7 @@ import (
 )
 
 type ListEnginesResponse struct {
-	Body map[string]*pkg.EngineInfo `example:"{\"python\": {\"version\": \"3.12.11\", \"installed\": true}}"`
+	Body map[string]*pkg.EngineInfo `example:"{\"python\": {\"version\": \"3.12.11\", \"run_file\": \"main.py\", \"installed\": true}}"`
 }
 
 func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error) {
@@ -27,7 +27,7 @@ type EngineRequest struct {
 }
 
 type EngineInfoResponse struct {
-	Body *pkg.EngineInfo `example:"{\"version\": \"3.12.11\", \"installed\": true}"`
+	Body *pkg.EngineInfo `example:"{\"version\": \"3.12.11\", \"run_file\": \"main.py\", \"installed\": true}"`
 }
 
 func EngineInfo(ctx context.Context, input *EngineRequest) (*EngineInfoResponse, error) {
