@@ -2,8 +2,6 @@ name: Publish to GHCR
 
 on:
   push:
-    branches:
-      - 'main'
     tags:
       - 'v*.*.*'
 
