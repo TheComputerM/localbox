@@ -21,6 +21,7 @@
 		}
 	],
 	"containerEnv": {
+		"SERVICE_ISOLATE_BIN": "/usr/bin/isolate",
 		"SERVICE_ENGINE_ROOT": "${containerWorkspaceFolder}/engines"
 	},
 	"customizations": {

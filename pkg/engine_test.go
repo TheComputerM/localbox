@@ -13,7 +13,7 @@ func init() {
 	options := &pkg.LocalboxConfig{
 		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
 		PoolSize:   1,
-		IsolateBin: "/usr/local/bin/isolate",
+		IsolateBin: os.Getenv("SERVICE_ISOLATE_BIN"),
 	}
 	if err := pkg.SetupLocalbox(options); err != nil {
 		panic(err)
