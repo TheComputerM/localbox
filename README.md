@@ -24,10 +24,10 @@ Both of these projects have some *issues* which did not fit my usecase, namely:
 
 ### With Docker
 
-The image exposes port 2000 by default, the `--privileged --cgroupns=host` are important as they allow localjudge to manipulate cgroups.
+The image exposes port 2000 by default, the `--privileged --cgroupns=host` are important as they allow localbox to manipulate cgroups.
 
 ```sh
-docker run --rm -it --privileged --cgroupns=host -p 2000:2000 localbox
+docker run --rm -it --privileged --cgroupns=host -p 2000:2000 ghcr.io/thecomputerm/localbox:latest
 ```
 
 ## Usage
