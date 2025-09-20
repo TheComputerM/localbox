@@ -18,6 +18,7 @@ Both of these projects have some *issues* which did not fit my usecase, namely:
 2. In Piston
     - Isolate doesn't share cgroups with host system which can lead to inaccurate program limits and runtime metrics.
     - All programs are run in bash which adds additional overhead to measuring program runtime metrics.
+    - You have to compile/build the runtime on your system for many languages instead of getting prebuilt binaries.
 3. In Judge0
     - Only supports outdated linux cgroups v1, you will have to change kernel options in any machine with a recent linux kernel.
     - Cannot take multiple files as input.
@@ -54,7 +55,7 @@ Here is a [list of available languages/runtimes](./engines/) packaged as engines
     {
       "content": "print(input())",
       "encoding": "utf8",
-      "name": "main.py"
+      "name": "@"
     }
   ]
 }

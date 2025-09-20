@@ -8,6 +8,7 @@
         "skip_shell": true
     },
     "meta": {
-        "version": "1.24.6"
+        "version": "1.24.6",
+        "run_file": "main.go"
     }
 }

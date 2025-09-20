@@ -76,6 +76,12 @@ func ExecuteWithEngine(
 	}
 	defer pkg.Globals.SandboxPool.Release(sandbox)
 
+	for i := range input.Body.Files {
+		if input.Body.Files[i].Name == "@" {
+			input.Body.Files[i].Name = engine.Meta.RunFile
+		}
+	}
+
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@
         "command": "python3 main.py"
     },
     "meta": {
-        "version": "3.12.11"
+        "version": "3.12.11",
+        "run_file": "main.py"
     }
 }
