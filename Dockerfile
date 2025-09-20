@@ -17,6 +17,11 @@ RUN cp -R $(nix-store -qR /output/profile) /output/store
 
 FROM base
 
+LABEL org.opencontainers.image.source=https://github.com/TheComputerM/localbox
+LABEL org.opencontainers.image.title="localbox"
+LABEL org.opencontainers.image.description="easy-to-host, general purpose and fast code execution system for running untrusted code in sandboxes."
+LABEL org.opencontainers.image.licenses=MIT
+
 COPY --from=build /output/store /nix/store
 COPY --from=build /output/profile/bin/ /usr/local/bin/
 
