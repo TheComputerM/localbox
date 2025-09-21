@@ -51,10 +51,18 @@ func main() {
 		})
 
 		huma.Register(app, huma.Operation{
+			OperationID: "execute",
+			Method:      http.MethodPost,
+			Path:        "/execute",
+			Summary:     "Execute",
+			Description: `Execute a series of phases, where each of them can have different options, packages and commands with persistent files. Use this for more complicated workflows.`,
+		}, routes.Execute)
+
+		huma.Register(app, huma.Operation{
 			OperationID: "list-engines",
 			Method:      http.MethodGet,
 			Summary:     "List all Engines",
-			Path:        "/engines",
+			Path:        "/engine",
 			Description: `List all the available engines.`,
 			Tags:        []string{"Engine"},
 		}, routes.ListEngines)
@@ -71,7 +79,7 @@ func main() {
 		huma.Register(app, huma.Operation{
 			OperationID: "install-engine",
 			Method:      http.MethodPost,
-			Path:        "/engine/{engine}/install",
+			Path:        "/engine/{engine}",
 			Summary:     "Install Engine",
 			Description: `Install the specified engine.`,
 			Tags:        []string{"Engine"},
@@ -80,19 +88,11 @@ func main() {
 		huma.Register(app, huma.Operation{
 			OperationID: "run-engine",
 			Method:      http.MethodPost,
-			Path:        "/engine/{engine}",
-			Summary:     "Run Engine",
+			Path:        "/engine/{engine}/execute",
+			Summary:     "Execute Engine",
 			Description: `Execute a predefined engine with an execution phase whose options can be overriden.`,
 			Tags:        []string{"Engine"},
 		}, routes.ExecuteWithEngine)
-
-		huma.Register(app, huma.Operation{
-			OperationID: "execute",
-			Method:      http.MethodPost,
-			Path:        "/execute",
-			Summary:     "Execute",
-			Description: `Execute a series of phases, where each of them can have different options, packages and commands with persistent files. Use this for more complicated workflows.`,
-		}, routes.Execute)
 
 		h.OnStart(func() {
 			e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", o.Port)))

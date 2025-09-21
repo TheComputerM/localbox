@@ -1,6 +1,6 @@
-<div style="text-align:center">
-  <h1>LocalBox</h1>
-  <p>An <b>easy-to-host</b>, <b>general purpose</b> and <b>fast</b> code execution system for running <b>untrusted</b> code in sandboxes.</p>
+<div>
+  <h1 style="text-align:center">LocalBox</h1>
+  <p style="text-align:center">An <b>easy-to-host</b>, <b>general purpose</b> and <b>fast</b> code execution system for running <b>untrusted</b> code in sandboxes.</p>
 </div>
 
 ## Why?
@@ -36,7 +36,6 @@ You can visit http://localhost:2000/docs to get the full API documentation.
 
 ![API Docs](./assets/api.png)
 
-
 Here are the options you can provide the sandbox with to configure it:
 
 ```go
@@ -68,7 +67,7 @@ type SandboxFile struct {
 
 Here is a [list of available languages/runtimes](./engines/) packaged as engines, these provide preconfigured compile and execute steps so you don't have to set stuff up.
 
-`POST /engine/{engine_name}`: Execute a predefined engine with an execution phase whose options can be overridden.
+`POST /engine/{engine_name}/execute`: Execute a predefined engine with an execution phase whose options can be overridden.
 
 ```jsonc
 // Request Body
