@@ -86,6 +86,15 @@ func main() {
 		}, routes.InstallEngine)
 
 		huma.Register(app, huma.Operation{
+			OperationID: "install-engine",
+			Method:      http.MethodDelete,
+			Path:        "/engine/{engine}",
+			Summary:     "Uninstall Engine",
+			Description: `Uninstall the specified engine.`,
+			Tags:        []string{"Engine"},
+		}, routes.UninstallEngine)
+
+		huma.Register(app, huma.Operation{
 			OperationID: "run-engine",
 			Method:      http.MethodPost,
 			Path:        "/engine/{engine}/execute",

@@ -50,6 +50,13 @@ func (e *Engine) Install() bool {
 	return cmd.Run() == nil
 }
 
+func (e *Engine) Uninstall() bool {
+	args := []string{"store", "delete"}
+	args = append(args, e.packages()...)
+	cmd := exec.Command("nix", args...)
+	return cmd.Run() != nil
+}
+
 func (e *Engine) Info() *EngineInfo {
 	return &EngineInfo{
 		EngineMetadata: *e.Meta,

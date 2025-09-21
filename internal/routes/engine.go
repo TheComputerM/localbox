@@ -49,6 +49,17 @@ func InstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, error)
 	return nil, nil
 }
 
+func UninstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, error) {
+	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
+	if err != nil {
+		return nil, err
+	}
+	if !engine.Uninstall() {
+		return nil, fmt.Errorf("failed to uninstall %s engine", input.Engine)
+	}
+	return nil, nil
+}
+
 type ExecuteWithEngineRequest struct {
 	Engine string `path:"engine" example:"python"`
 	Body   struct {
