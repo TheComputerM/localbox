@@ -5,4 +5,4 @@ RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/isolate.asc] http://www.uc
     apt update && apt install -y --no-install-recommends isolate && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSfL https://goblin.run/github.com/air-verse/air | sh
+RUN curl -sSfL https://raw.githubusercontent.com/air-verse/air/master/install.sh | sh -s -- -b /usr/local/bin
