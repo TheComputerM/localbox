@@ -43,7 +43,7 @@ func main() {
 		huma.Register(app, huma.Operation{
 			OperationID: "system-info",
 			Method:      http.MethodGet,
-			Path:        "/system",
+			Path:        "/",
 			Summary:     "System Info",
 			Description: `Get system information and configuration data.`,
 		}, func(ctx context.Context, _ *struct{}) (*routes.SystemInfoResponse, error) {
@@ -51,10 +51,18 @@ func main() {
 		})
 
 		huma.Register(app, huma.Operation{
+			OperationID: "run-system-gc",
+			Method:      http.MethodPost,
+			Path:        "/system/gc",
+			Summary:     "Run System GC",
+			Description: `Run the Nix garbage collector to free up space from unused packages. Will also remove installed engines.`,
+		}, routes.RunSystemGC)
+
+		huma.Register(app, huma.Operation{
 			OperationID: "execute",
 			Method:      http.MethodPost,
 			Path:        "/execute",
-			Summary:     "Execute",
+			Summary:     "Execute Workflow",
 			Description: `Execute a series of phases, where each of them can have different options, packages and commands with persistent files. Use this for more complicated workflows.`,
 		}, routes.Execute)
 
