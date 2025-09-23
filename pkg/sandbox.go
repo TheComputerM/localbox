@@ -173,6 +173,7 @@ type SandboxPhase struct {
 type SandboxPhaseOptions struct {
 	MemoryLimit  int               `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
 	TimeLimit    int               `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
+	WallTimeLimit int               `json:"wall_time_limit,omitempty" doc:"Maximum wall time of the program in milliseconds, '-1' for no limit" default:"10000"`
 	FilesLimit   int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
 	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
 	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
@@ -269,6 +270,12 @@ func buildIsolateCommand(
 	if options.TimeLimit != -1 {
 		command = append(command,
 			"--time="+strconv.FormatFloat(float64(options.TimeLimit)/1000, 'f', 3, 64),
+		)
+	}
+
+	if options.WallTimeLimit != -1 {
+		command = append(command,
+			"--wall-time="+strconv.FormatFloat(float64(options.WallTimeLimit)/1000, 'f', 3, 64),
 		)
 	}
 
