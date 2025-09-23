@@ -63,7 +63,7 @@ type SandboxFile struct {
 
 ### Using an Engine
 
-`GET /engines`: List all the available engines.
+`GET /engine`: List all the available engines.
 
 Here is a [list of available languages/runtimes](./engines/) packaged as engines, these provide preconfigured compile and execute steps so you don't have to set stuff up.
 
