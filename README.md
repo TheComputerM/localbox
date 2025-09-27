@@ -88,15 +88,34 @@ Here is a [list of available languages/runtimes](./engines/) packaged as engines
 
 // Response
 {
-  "$schema": "http://localhost:9000/schemas/SandboxPhaseResults.json",
-  "time": 20,
-  "wall_time": 42,
-  "memory": 4076,
+  "$schema": "http://localhost:2000/schemas/SandboxPhaseResults.json",
+  "time": 24,
+  "wall_time": 55,
+  "memory": 6748,
+  "max_rss": 11212,
   "status": "OK",
   "message": "Executed",
   "exit_code": 0,
   "stdout": "hello world",
   "stderr": ""
+}
+```
+
+```go
+type SandboxPhaseMetadata struct {
+	Time     int    `json:"time" doc:"Run time of the program in milliseconds" example:"500"`
+	WallTime int    `json:"wall_time" doc:"Wall time of the program in milliseconds" example:"1000"`
+	Memory   int    `json:"memory" doc:"Total memory use by the whole control group in KB" example:"256"`
+	MaxRSS   int    `json:"max_rss" doc:"Maximum resident set size of the program in KB" example:"128"`
+	Status   string `json:"status" doc:"Two-letter status code" example:"OK"`
+	Message  string `json:"message" doc:"Human-readable message" example:"Executed"`
+	ExitCode int    `json:"exit_code" doc:"Exit code from the program" example:"0"`
+}
+
+type SandboxPhaseResults struct {
+	SandboxPhaseMetadata
+	Stdout string `json:"stdout" doc:"stdout of the program" example:"program output"`
+	Stderr string `json:"stderr" doc:"stderr of the program" example:""`
 }
 ```
 

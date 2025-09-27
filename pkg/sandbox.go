@@ -117,6 +117,7 @@ type SandboxPhaseMetadata struct {
 	Time     int    `json:"time" doc:"Run time of the program in milliseconds" example:"500"`
 	WallTime int    `json:"wall_time" doc:"Wall time of the program in milliseconds" example:"1000"`
 	Memory   int    `json:"memory" doc:"Total memory use by the whole control group in KB" example:"256"`
+	MaxRSS   int    `json:"max_rss" doc:"Maximum resident set size of the program in KB" example:"128"`
 	Status   string `json:"status" doc:"Two-letter status code" example:"OK"`
 	Message  string `json:"message" doc:"Human-readable message" example:"Executed"`
 	ExitCode int    `json:"exit_code" doc:"Exit code from the program" example:"0"`
@@ -133,6 +134,7 @@ func (s Sandbox) parseMetadata() (*SandboxPhaseMetadata, error) {
 		Status:  "OK",
 		Message: "Executed",
 	}
+	// fmt.Println(string(file))
 	for _, line := range strings.Split(string(file), "\n") {
 		key, value, found := strings.Cut(line, ":")
 		if !found {
@@ -151,6 +153,8 @@ func (s Sandbox) parseMetadata() (*SandboxPhaseMetadata, error) {
 			output.WallTime = int(wallTime * 1000)
 		case "cg-mem":
 			output.Memory, _ = strconv.Atoi(value)
+		case "max-rss":
+			output.MaxRSS, _ = strconv.Atoi(value)
 		case "exitcode":
 			output.ExitCode, _ = strconv.Atoi(value)
 		}
@@ -207,8 +211,15 @@ func (s Sandbox) Run(
 	stderr := utils.NewLimitedWriter(options.BufferLimit)
 	cmd.Stderr = stderr
 
+	isOutputBufferExceeded := false
+
 	if err := cmd.Run(); err != nil {
-		return nil, errors.Join(fmt.Errorf("sandbox error: %s", cmd.String()), errors.New(stderr.String()), err)
+		if _, found := os.Stat(s.metadataFilePath()); errors.Is(found, os.ErrNotExist) {
+			// throw error if metadata file doesn't exist
+			return nil, errors.Join(fmt.Errorf("sandbox error: %s", cmd.String()), errors.New(stderr.String()), err)
+		} else if errors.Is(err, utils.ErrWriteLimitExceeded) {
+			isOutputBufferExceeded = true
+		}
 	}
 
 	results := &SandboxPhaseResults{
@@ -222,6 +233,11 @@ func (s Sandbox) Run(
 	}
 
 	results.SandboxPhaseMetadata = *meta
+
+	if isOutputBufferExceeded {
+		results.Status = "OE"
+		results.Message = "Output buffer limit exceeded"
+	}
 
 	return results, nil
 }
