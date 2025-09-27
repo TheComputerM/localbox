@@ -171,15 +171,16 @@ type SandboxPhase struct {
 }
 
 type SandboxPhaseOptions struct {
-	MemoryLimit  int               `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
-	TimeLimit    int               `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
+	MemoryLimit   int               `json:"memory_limit,omitempty" doc:"Maximum total memory usage allowed by the whole control group in KB, '-1' for no limit" default:"-1"`
+	TimeLimit     int               `json:"time_limit,omitempty" doc:"Maximum CPU time of the program in milliseconds, '-1' for no limit" default:"5000"`
 	WallTimeLimit int               `json:"wall_time_limit,omitempty" doc:"Maximum wall time of the program in milliseconds, '-1' for no limit" default:"10000"`
-	FilesLimit   int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
-	ProcessLimit int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
-	Network      bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
-	Stdin        string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" default:""`
-	BufferLimit  int               `json:"buffer_limit,omitempty" doc:"Maximum kilobytes to capture from stdout and stderr" default:"8"`
-	Environment  map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
+	FilesLimit    int               `json:"files_limit,omitempty" doc:"Maximum number of open files allowed in the sandbox, '-1' for no limit" default:"64"`
+	FileSizeLimit int               `json:"file_size_limit,omitempty" doc:"Maximum size a file created/modified in the sandbox in KB, -1 for no limit" default:"10000"`
+	ProcessLimit  int               `json:"process_limit,omitempty" doc:"Maximum number of processes allowed in the sandbox" default:"64"`
+	Network       bool              `json:"network,omitempty" doc:"Whether to enable network access in the sandbox" default:"false"`
+	Stdin         string            `json:"stdin,omitempty" doc:"Text to pass into stdin of the program" default:""`
+	BufferLimit   int               `json:"buffer_limit,omitempty" doc:"Maximum kilobytes to capture from stdout and stderr" default:"8"`
+	Environment   map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
 }
 
 // Run a SandboxPhase with it's options inside the sandbox
@@ -282,6 +283,12 @@ func buildIsolateCommand(
 	if options.MemoryLimit != -1 {
 		command = append(command,
 			"--cg-mem="+strconv.Itoa(options.MemoryLimit),
+		)
+	}
+
+	if options.FileSizeLimit != -1 {
+		command = append(command,
+			"--fsize="+strconv.Itoa(options.FileSizeLimit),
 		)
 	}
 
