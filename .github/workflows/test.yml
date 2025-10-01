@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: golang:1.25-alpine
-      options: --privileged --cgroupns=host
+      options: >-
+        --privileged
+        --volume /sys/fs/cgroup:/sys/fs/cgroup:rw
 
     steps:
       - name: Checkout code
