@@ -202,8 +202,13 @@ func (s Sandbox) Run(
 		}
 	}
 
-	args := buildNixShell(phase.Packages, buildIsolateCommand(s, phase, options))
-	cmd := exec.Command("nix", args...)
+	var cmd *exec.Cmd
+	isolateArgs := buildIsolateCommand(s, phase, options)
+	if len(phase.Packages) > 0 {
+		cmd = exec.Command("nix", buildNixShell(phase.Packages, isolateArgs)...)
+	} else {
+		cmd = exec.Command(isolateArgs[0], isolateArgs[1:]...)
+	}
 
 	stdout := utils.NewLimitedWriter(uint64(options.BufferLimit) * 1024)
 	cmd.Stdout = stdout
