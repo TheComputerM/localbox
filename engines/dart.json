@@ -1,0 +1,14 @@
+{
+    "compile": {
+        "packages": ["nixpkgs/nixos-25.05#dart"],
+        "command": "dart compile aot-snapshot main.dart -o output.aot"
+    },
+    "execute": {
+        "packages": ["nixpkgs/nixos-25.05#dart"],
+        "command": "dartaotruntime output.aot"
+    },
+    "meta": {
+        "version": "3.7.3",
+        "run_file": "main.dart"
+    }
+}
