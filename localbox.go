@@ -19,7 +19,7 @@ import (
 
 func init() {
 	if os.Getuid() != 0 {
-		log.Fatal("LocalBox must be run as root")
+		log.Println("WARNING: LocalBox is not running as root")
 	}
 	if err := internal.InitCGroup(); err != nil {
 		log.Fatal(errors.Join(fmt.Errorf("couldn't init cgroup"), err))
