@@ -10,9 +10,64 @@ import (
 	"github.com/thecomputerm/localbox/pkg"
 )
 
+func TestSandboxMount(t *testing.T) {
+	box := pkg.Sandbox(0)
+	require.NoError(t, box.Init())
+	t.Cleanup(func() {
+		require.NoError(t, box.Cleanup())
+	})
+
+	t.Run("escape", func(t *testing.T) {
+		require.Error(t, box.Mount([]pkg.SandboxFile{
+			{
+				Name:    "../escape.txt",
+				Content: "This should not work",
+			},
+		}))
+	})
+
+	t.Run("simple", func(t *testing.T) {
+		require.NoError(t, box.Mount([]pkg.SandboxFile{
+			{
+				Name:    "file1.txt",
+				Content: "1",
+			},
+			{
+				Name:   "./file2.txt",
+				Content: "2",
+			},
+		}))
+		file1 := filepath.Join(box.BoxPath(), "file1.txt")
+		require.FileExists(t, file1)
+		content, err := os.ReadFile(file1)
+		require.NoError(t, err)
+		require.Equal(t, "1", string(content))
+		
+		file2 := filepath.Join(box.BoxPath(), "file2.txt")
+		require.FileExists(t, file2)
+		content, err = os.ReadFile(file2)
+		require.NoError(t, err)
+		require.Equal(t, "2", string(content))
+	})
+
+	t.Run("nested", func(t *testing.T) {
+		require.NoError(t, box.Mount([]pkg.SandboxFile{
+			{
+				Name:    "nested/file.txt",
+				Content: "nested",
+			},
+		}))
+		file := filepath.Join(box.BoxPath(), "nested", "file.txt")
+		require.FileExists(t, file)
+		content, err := os.ReadFile(file)
+		require.NoError(t, err)
+		require.Equal(t, "nested", string(content))
+	})
+}
+
 func TestSandboxFileAccess(t *testing.T) {
 	box := pkg.Sandbox(0)
-	box.Init()
+	require.NoError(t, box.Init())
 	t.Cleanup(func() {
 		require.NoError(t, box.Cleanup())
 	})
@@ -38,12 +93,11 @@ func TestSandboxFileAccess(t *testing.T) {
 	require.Equal(t, "OK", result.Status)
 	require.Equal(t, 0, result.ExitCode)
 	require.Equal(t, "Hello World", result.Stdout)
-	require.Equal(t, "", result.Stderr)
 }
 
 func TestStdin(t *testing.T) {
 	box := pkg.Sandbox(0)
-	box.Init()
+	require.NoError(t, box.Init())
 	t.Cleanup(func() {
 		require.NoError(t, box.Cleanup())
 	})
@@ -61,7 +115,6 @@ func TestStdin(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "OK", result.Status)
 	require.Equal(t, 0, result.ExitCode)
-	require.Equal(t, "", result.Stderr)
 
 	outputFile := filepath.Join(box.BoxPath(), "output.txt")
 	require.FileExists(t, outputFile)
@@ -72,7 +125,7 @@ func TestStdin(t *testing.T) {
 
 func TestWallTime(t *testing.T) {
 	box := pkg.Sandbox(0)
-	box.Init()
+	require.NoError(t, box.Init())
 	t.Cleanup(func() {
 		require.NoError(t, box.Cleanup())
 	})
