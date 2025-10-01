@@ -1,29 +1,14 @@
 package pkg_test
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/mcuadros/go-defaults"
 	"github.com/stretchr/testify/require"
-	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/pkg"
 )
-
-func init() {
-	if err := internal.InitCGroup(); err != nil {
-		panic(errors.Join(errors.New("failed to init cgroup"), err))
-	}
-	options := &pkg.LocalboxConfig{
-		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
-		PoolSize:   1,
-		IsolateBin: os.Getenv("SERVICE_ISOLATE_BIN"),
-	}
-	if err := pkg.SetupLocalbox(options); err != nil {
-		panic(err)
-	}
-}
 
 func TestGetEngine(t *testing.T) {
 	engine, err := pkg.Globals.EngineManager.Get("python")
@@ -71,11 +56,17 @@ func TestEngines(t *testing.T) {
 				require.NoError(t, sandbox.Cleanup())
 			})
 			require.NoError(t, sandbox.Mount(getFiles(t, engineName)))
-			opts := defaultSandboxPhaseOptions()
-			opts.Stdin = "localbox"
+
+			// install the engine
 			require.NoError(t, engine.Install())
 
-			execute, err := engine.Run(sandbox, opts)
+			options := new(pkg.SandboxPhaseOptions)
+			defaults.SetDefaults(options)
+			options.Stdin = "localbox"
+
+			// run the engine
+			execute, err := engine.Run(sandbox, options)
+
 			require.NoError(t, err)
 			require.Equal(t, "OK", execute.Status, execute.Message, execute.Stderr)
 			require.Equal(t, "localbox", execute.Stdout)

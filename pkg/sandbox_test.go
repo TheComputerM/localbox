@@ -10,12 +10,6 @@ import (
 	"github.com/thecomputerm/localbox/pkg"
 )
 
-func defaultSandboxPhaseOptions() *pkg.SandboxPhaseOptions {
-	output := new(pkg.SandboxPhaseOptions)
-	defaults.SetDefaults(output)
-	return output
-}
-
 func TestSandboxFileAccess(t *testing.T) {
 	box := pkg.Sandbox(0)
 	box.Init()
@@ -30,11 +24,14 @@ func TestSandboxFileAccess(t *testing.T) {
 		},
 	}))
 
+	options := new(pkg.SandboxPhaseOptions)
+	defaults.SetDefaults(options)
 	result, err := box.Run(
 		&pkg.SandboxPhase{
-			Command: "cat hello.txt",
+			Command:  "cat hello.txt",
+			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
 		},
-		defaultSandboxPhaseOptions(),
+		options,
 	)
 	require.NoError(t, err)
 
@@ -51,12 +48,13 @@ func TestStdin(t *testing.T) {
 		require.NoError(t, box.Cleanup())
 	})
 
-	options := defaultSandboxPhaseOptions()
+	options := new(pkg.SandboxPhaseOptions)
+	defaults.SetDefaults(options)
 	options.Stdin = "Hello World"
-
 	result, err := box.Run(
 		&pkg.SandboxPhase{
-			Command: "tee output.txt",
+			Command:  "tee output.txt",
+			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
 		},
 		options,
 	)
@@ -79,11 +77,14 @@ func TestWallTime(t *testing.T) {
 		require.NoError(t, box.Cleanup())
 	})
 
+	options := new(pkg.SandboxPhaseOptions)
+	defaults.SetDefaults(options)
 	result, err := box.Run(
 		&pkg.SandboxPhase{
-			Command: "sleep 2",
+			Command:  "sleep 2",
+			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
 		},
-		defaultSandboxPhaseOptions(),
+		options,
 	)
 	require.NoError(t, err)
 
