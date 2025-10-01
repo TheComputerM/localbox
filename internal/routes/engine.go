@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/thecomputerm/localbox/pkg"
@@ -43,8 +44,8 @@ func InstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, error)
 	if err != nil {
 		return nil, err
 	}
-	if !engine.Install() {
-		return nil, fmt.Errorf("failed to install %s engine", input.Engine)
+	if err := engine.Install(); err != nil {
+		return nil, errors.Join(fmt.Errorf("failed to install %s engine", input.Engine), err)
 	}
 	return nil, nil
 }
@@ -54,8 +55,8 @@ func UninstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, erro
 	if err != nil {
 		return nil, err
 	}
-	if !engine.Uninstall() {
-		return nil, fmt.Errorf("failed to uninstall %s engine", input.Engine)
+	if err := engine.Uninstall(); err != nil {
+		return nil, errors.Join(fmt.Errorf("failed to uninstall %s engine", input.Engine), err)
 	}
 	return nil, nil
 }

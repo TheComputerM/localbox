@@ -42,19 +42,19 @@ func (e *Engine) isInstalled() bool {
 	return cmd.Run() == nil
 }
 
-func (e *Engine) Install() bool {
+func (e *Engine) Install() error {
 	args := []string{"shell"}
 	args = append(args, e.packages()...)
 	args = append(args, "-c", "true")
 	cmd := exec.Command("nix", args...)
-	return cmd.Run() == nil
+	return cmd.Run()
 }
 
-func (e *Engine) Uninstall() bool {
+func (e *Engine) Uninstall() error {
 	args := []string{"store", "delete"}
 	args = append(args, e.packages()...)
 	cmd := exec.Command("nix", args...)
-	return cmd.Run() != nil
+	return cmd.Run()
 }
 
 func (e *Engine) Info() *EngineInfo {
