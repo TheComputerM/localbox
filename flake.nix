@@ -24,7 +24,7 @@
             name = "localbox";
             src = self;
             goSum = ./go.sum;
-            vendorHash = "sha256-3Nc+epzEpRJMXCuP9XkA8ZvIyW6ch1OsxxtfShlkkBI=";
+            vendorHash = "sha256-/k4s1PBWz41rgKbJ4nenBdwUPEvt28I2DvwPLlqVNR8=";
             checkFlags = [ "-skip" ];
           };
           isolate = pkgs.isolate;
