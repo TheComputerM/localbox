@@ -74,9 +74,10 @@ func TestEngines(t *testing.T) {
 			opts := defaultSandboxPhaseOptions()
 			opts.Stdin = "localbox"
 			require.NoError(t, engine.Install())
+
 			execute, err := engine.Run(sandbox, opts)
 			require.NoError(t, err)
-			require.Equal(t, "OK", execute.Status)
+			require.Equal(t, "OK", execute.Status, execute.Message, execute.Stderr)
 			require.Equal(t, "localbox", execute.Stdout)
 		})
 	}
