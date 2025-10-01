@@ -16,6 +16,7 @@
 		"setup": "go mod download"
 	},
 	"containerEnv": {
+		"SERVICE_PORT": "3000",
 		"SERVICE_ISOLATE_BIN": "/home/vscode/.nix-profile/bin/isolate",
 		"SERVICE_ENGINE_ROOT": "${containerWorkspaceFolder}/engines",
 		"ISOLATE_CONFIG_FILE": "${containerWorkspaceFolder}/isolate.conf"
@@ -28,7 +29,7 @@
 		}
 	},
 	"portsAttributes": {
-		"2000": {
+		"3000": {
 			"label": "LocalBox API",
 			"onAutoForward": "notify"
 		}
