@@ -15,17 +15,10 @@
 		"isolate": "nix profile add .#isolate",
 		"setup": "go mod download"
 	},
-	"mounts": [
-		{
-			"source": "${localWorkspaceFolder}/isolate.conf",
-			"target": "/etc/isolate",
-			"type": "bind"
-		}
-	],
 	"containerEnv": {
 		"SERVICE_ISOLATE_BIN": "/home/vscode/.nix-profile/bin/isolate",
 		"SERVICE_ENGINE_ROOT": "${containerWorkspaceFolder}/engines",
-		"ISOLATE_CONFIG_FILE": "/etc/isolate"
+		"ISOLATE_CONFIG_FILE": "${containerWorkspaceFolder}/isolate.conf"
 	},
 	"customizations": {
 		"vscode": {
