@@ -1,18 +1,20 @@
 {
 	"name": "LocalBox",
-	"build": {
-		"dockerfile": "Dockerfile.dev",
-		"context": "."
-	},
+	"image": "mcr.microsoft.com/devcontainers/go:1.25-trixie",
+	"privileged": true,
+	"runArgs": [
+		"--cgroupns=host"
+	],
 	"features": {
 		"ghcr.io/devcontainers/features/nix:1": {
 			"extraNixConfig": "experimental-features = nix-command flakes"
 		}
 	},
-	"privileged": true,
-	"runArgs": [
-		"--cgroupns=host"
-	],
+	"postCreateCommand": {
+		"air": "go install github.com/air-verse/air@v1.62.0",
+		"isolate": "nix profile add .#isolate",
+		"setup": "go mod download"
+	},
 	"mounts": [
 		{
 			"source": "${localWorkspaceFolder}/isolate.conf",
@@ -21,8 +23,9 @@
 		}
 	],
 	"containerEnv": {
-		"SERVICE_ISOLATE_BIN": "/usr/bin/isolate",
-		"SERVICE_ENGINE_ROOT": "${containerWorkspaceFolder}/engines"
+		"SERVICE_ISOLATE_BIN": "/home/vscode/.nix-profile/bin/isolate",
+		"SERVICE_ENGINE_ROOT": "${containerWorkspaceFolder}/engines",
+		"ISOLATE_CONFIG_FILE": "/etc/isolate"
 	},
 	"customizations": {
 		"vscode": {

@@ -35,5 +35,6 @@ jobs:
         env:
           SERVICE_ENGINE_ROOT: ${{ github.workspace }}/engines
           SHELL: /bin/sh
+          ISOLATE_CONFIG_FILE: ${{ github.workspace }}/isolate.conf
         run: go test -v ./...
 
