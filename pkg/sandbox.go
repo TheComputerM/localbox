@@ -120,7 +120,7 @@ type SandboxPhaseMetadata struct {
 	MaxRSS   int    `json:"max_rss" doc:"Maximum resident set size of the program in KB" example:"128"`
 	Status   string `json:"status" doc:"Two-letter status code" example:"OK"`
 	Message  string `json:"message" doc:"Human-readable message" example:"Executed"`
-	ExitCode int    `json:"exit_code" doc:"Exit code from the program" example:"0"`
+	ExitCode int    `json:"exit_code" doc:"Exit code/signal from the program" example:"0"`
 }
 
 // Helper to parse metadata file created by isolate
@@ -203,11 +203,11 @@ func (s Sandbox) Run(
 	}
 
 	var cmd *exec.Cmd
-	isolateArgs := buildIsolateCommand(s, phase, options)
+	isolateCommand := buildIsolateCommand(s, phase, options)
 	if len(phase.Packages) > 0 {
-		cmd = exec.Command("nix", buildNixShell(phase.Packages, isolateArgs)...)
+		cmd = exec.Command("nix", buildNixShell(phase.Packages, isolateCommand)...)
 	} else {
-		cmd = exec.Command(isolateArgs[0], isolateArgs[1:]...)
+		cmd = exec.Command(isolateCommand[0], isolateCommand[1:]...)
 	}
 
 	stdout := utils.NewLimitedWriter(uint64(options.BufferLimit) * 1024)
