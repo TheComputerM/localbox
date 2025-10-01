@@ -92,11 +92,11 @@ func (e *Engine) Run(s Sandbox, options *SandboxPhaseOptions) (*SandboxPhaseResu
 
 type EngineManager struct {
 	// Path to predefined engine definitions
-	Index string
+	Root string
 }
 
 func (m *EngineManager) Get(name string) (*Engine, error) {
-	content, err := os.ReadFile(path.Join(m.Index, name+".json"))
+	content, err := os.ReadFile(path.Join(m.Root, name+".json"))
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("engine %s not found", name), err)
 	}
@@ -115,7 +115,7 @@ func (m *EngineManager) Get(name string) (*Engine, error) {
 }
 
 func (m *EngineManager) List() (map[string]*EngineInfo, error) {
-	entries, err := os.ReadDir(m.Index)
+	entries, err := os.ReadDir(m.Root)
 	if err != nil {
 		return nil, err
 	}
