@@ -23,7 +23,7 @@ jobs:
 
       - name: Install Isolate
         run: |
-          nix profile install .#isolate
+          nix profile add .#isolate
           echo "SERVICE_ISOLATE_BIN=$(nix path-info .#isolate)/bin/isolate" >> $GITHUB_ENV
 
       - name: Download Go modules
@@ -31,6 +31,7 @@ jobs:
       
       - name: Run tests
         env:
-          SERVICE_ENGINE_ROOT: ./engines
+          SERVICE_ENGINE_ROOT: ${{ github.workspace }}/engines
+          SHELL: /bin/sh
         run: go test -v ./...
 
