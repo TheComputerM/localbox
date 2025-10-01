@@ -205,10 +205,10 @@ func (s Sandbox) Run(
 	args := buildNixShell(phase.Packages, buildIsolateCommand(s, phase, options))
 	cmd := exec.Command("nix", args...)
 
-	stdout := utils.NewLimitedWriter(options.BufferLimit)
+	stdout := utils.NewLimitedWriter(uint64(options.BufferLimit) * 1024)
 	cmd.Stdout = stdout
 
-	stderr := utils.NewLimitedWriter(options.BufferLimit)
+	stderr := utils.NewLimitedWriter(uint64(options.BufferLimit) * 1024)
 	cmd.Stderr = stderr
 
 	isOutputBufferExceeded := false

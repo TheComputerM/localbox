@@ -38,10 +38,10 @@ func (lw *limitedWriter) String() string {
 
 var _ io.Writer = (*limitedWriter)(nil)
 
-func NewLimitedWriter(capacity int) *limitedWriter {
+func NewLimitedWriter(capacity uint64) *limitedWriter {
 	var buf bytes.Buffer
 	return &limitedWriter{
 		writer:   &buf,
-		capacity: uint64(capacity) * 1024,
+		capacity: capacity,
 	}
 }
