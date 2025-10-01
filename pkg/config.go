@@ -3,6 +3,7 @@ package pkg
 import (
 	"errors"
 	"os"
+	"path/filepath"
 )
 
 type LocalboxConfig struct {
@@ -22,8 +23,13 @@ type globals struct {
 var Globals globals
 
 func SetupLocalbox(options *LocalboxConfig) error {
+	engoneRoot, err := filepath.Abs(options.EngineRoot)
+	if err != nil {
+		return err
+	}
+
 	Globals = globals{
-		EngineManager: &EngineManager{Index: options.EngineRoot},
+		EngineManager: &EngineManager{Index: engoneRoot},
 		SandboxPool:   NewSandboxPool(options.PoolSize),
 		IsolateBin:    options.IsolateBin,
 		ShellBin:      os.Getenv("SHELL"),

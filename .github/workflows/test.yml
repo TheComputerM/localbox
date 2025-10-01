@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.25-alpine
+      options: --privileged --cgroupns=host
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Install Isolate
+        run: |
+          nix profile install .#isolate
+          echo "SERVICE_ISOLATE_BIN=$(nix path-info .#isolate)/bin/isolate" >> $GITHUB_ENV
+
+      - name: Download Go modules
+        run: go mod download
+      
+      - name: Run tests
+        env:
+          SERVICE_ENGINE_ROOT: ./engines
+        run: go test -v ./...
+
