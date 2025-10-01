@@ -69,6 +69,7 @@ var engineCompileOptions = &SandboxPhaseOptions{
 	MemoryLimit:  -1,
 	TimeLimit:    30000,
 	FilesLimit:   256,
+	FileSizeLimit: -1,
 	ProcessLimit: 256,
 	Network:      false,
 	Stdin:        "",

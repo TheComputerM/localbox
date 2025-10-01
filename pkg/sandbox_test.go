@@ -33,7 +33,7 @@ func TestSandboxMount(t *testing.T) {
 				Content: "1",
 			},
 			{
-				Name:   "./file2.txt",
+				Name:    "./file2.txt",
 				Content: "2",
 			},
 		}))
@@ -42,7 +42,7 @@ func TestSandboxMount(t *testing.T) {
 		content, err := os.ReadFile(file1)
 		require.NoError(t, err)
 		require.Equal(t, "1", string(content))
-		
+
 		file2 := filepath.Join(box.BoxPath(), "file2.txt")
 		require.FileExists(t, file2)
 		content, err = os.ReadFile(file2)
@@ -95,7 +95,7 @@ func TestSandboxFileAccess(t *testing.T) {
 	require.Equal(t, "Hello World", result.Stdout)
 }
 
-func TestStdin(t *testing.T) {
+func TestSandbox_Stdin(t *testing.T) {
 	box := pkg.Sandbox(0)
 	require.NoError(t, box.Init())
 	t.Cleanup(func() {
@@ -123,7 +123,7 @@ func TestStdin(t *testing.T) {
 	require.Equal(t, "Hello World", string(content))
 }
 
-func TestWallTime(t *testing.T) {
+func TestSandbox_WallTimeLimit(t *testing.T) {
 	box := pkg.Sandbox(0)
 	require.NoError(t, box.Init())
 	t.Cleanup(func() {
@@ -132,6 +132,7 @@ func TestWallTime(t *testing.T) {
 
 	options := new(pkg.SandboxPhaseOptions)
 	defaults.SetDefaults(options)
+	options.WallTimeLimit = 1000
 	result, err := box.Run(
 		&pkg.SandboxPhase{
 			Command:  "sleep 2",
@@ -141,6 +142,29 @@ func TestWallTime(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	require.Equal(t, "OK", result.Status)
-	require.Greater(t, result.WallTime, 2000)
+	require.Equal(t, "TO", result.Status)
+}
+
+func TestSandbox_FileSizeLimit(t *testing.T) {
+	box := pkg.Sandbox(0)
+	require.NoError(t, box.Init())
+	t.Cleanup(func() {
+		require.NoError(t, box.Cleanup())
+	})
+
+	options := new(pkg.SandboxPhaseOptions)
+	defaults.SetDefaults(options)
+	options.FileSizeLimit = 1
+
+	result, err := box.Run(
+		&pkg.SandboxPhase{
+			Command:  "truncate -s 2K filename.txt",
+			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+		},
+		options,
+	)
+	require.NoError(t, err)
+
+	require.Equal(t, "SG", result.Status)
+	require.Equal(t, 25, result.ExitCode)
 }

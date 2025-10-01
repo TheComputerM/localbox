@@ -134,7 +134,7 @@ func (s Sandbox) parseMetadata() (*SandboxPhaseMetadata, error) {
 		Status:  "OK",
 		Message: "Executed",
 	}
-	// fmt.Println(string(file))
+
 	for _, line := range strings.Split(string(file), "\n") {
 		key, value, found := strings.Cut(line, ":")
 		if !found {
@@ -155,7 +155,7 @@ func (s Sandbox) parseMetadata() (*SandboxPhaseMetadata, error) {
 			output.Memory, _ = strconv.Atoi(value)
 		case "max-rss":
 			output.MaxRSS, _ = strconv.Atoi(value)
-		case "exitcode":
+		case "exitcode", "exitsig":
 			output.ExitCode, _ = strconv.Atoi(value)
 		}
 	}
