@@ -61,7 +61,7 @@ func UninstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, erro
 	return nil, nil
 }
 
-type ExecuteWithEngineRequest struct {
+type ExecuteEngineRequest struct {
 	Engine string `path:"engine" example:"python"`
 	Body   struct {
 		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox"`
@@ -69,14 +69,14 @@ type ExecuteWithEngineRequest struct {
 	}
 }
 
-type ExecuteWithEngineResponse struct {
+type ExecuteEngineResponse struct {
 	Body *pkg.SandboxPhaseResults
 }
 
-func ExecuteWithEngine(
+func ExecuteEngine(
 	ctx context.Context,
-	input *ExecuteWithEngineRequest,
-) (*ExecuteWithEngineResponse, error) {
+	input *ExecuteEngineRequest,
+) (*ExecuteEngineResponse, error) {
 	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
 	if err != nil {
 		return nil, err
@@ -103,5 +103,5 @@ func ExecuteWithEngine(
 		return nil, err
 	}
 
-	return &ExecuteWithEngineResponse{Body: output}, nil
+	return &ExecuteEngineResponse{Body: output}, nil
 }

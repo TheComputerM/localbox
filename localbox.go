@@ -113,7 +113,7 @@ func main() {
 			Summary:     "Execute Engine",
 			Description: `Execute a predefined engine with an execution phase whose options can be overriden.`,
 			Tags:        []string{"Engine"},
-		}, routes.ExecuteWithEngine)
+		}, routes.ExecuteEngine)
 
 		h.OnStart(func() {
 			fmt.Printf("LocalBox is up and running on :%d\n", o.Port)
