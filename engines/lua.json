@@ -1,0 +1,10 @@
+{
+    "execute": {
+        "packages": ["nixpkgs/nixos-25.05#lua5_4_compat"],
+        "command": "lua main.lua"
+    },
+    "meta": {
+        "version": "5.4.7",
+        "run_file": "main.lua"
+    }
+}
