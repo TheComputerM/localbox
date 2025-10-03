@@ -65,11 +65,36 @@ func TestEngines(t *testing.T) {
 			options.Stdin = "localbox"
 
 			// run the engine
-			execute, err := engine.Run(sandbox, options)
+			result, err := engine.Run(sandbox, options)
 
 			require.NoError(t, err)
-			require.Equal(t, "OK", execute.Status, execute.Message, execute.Stderr)
-			require.Equal(t, "localbox", execute.Stdout)
+			require.Equal(t, "OK", result.Status, result.Message, result.Stderr)
+			require.Equal(t, "localbox", result.Stdout)
 		})
 	}
+}
+
+func TestEngineCompileError(t *testing.T) {
+	engine, err := pkg.Globals.EngineManager.Get("c")
+	require.NoError(t, err)
+	require.NoError(t, engine.Install())
+
+	sandbox := pkg.Sandbox(0)
+	require.NoError(t, sandbox.Init())
+	t.Cleanup(func() {
+		require.NoError(t, sandbox.Cleanup())
+	})
+	require.NoError(t, sandbox.Mount([]pkg.SandboxFile{
+		{
+			Name:    "main.c",
+			Content: "this should throw a compile error",
+		},
+	}))
+
+	options := new(pkg.SandboxPhaseOptions)
+	defaults.SetDefaults(options)
+	result, err := engine.Run(sandbox, options)
+
+	require.NoError(t, err)
+	require.Equal(t, "CE", result.Status)
 }
