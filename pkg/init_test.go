@@ -3,6 +3,7 @@ package pkg_test
 import (
 	"errors"
 	"os"
+	"runtime"
 
 	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/pkg"
@@ -16,7 +17,7 @@ func init() {
 	options := &pkg.LocalboxConfig{
 		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
 		IsolateBin: os.Getenv("SERVICE_ISOLATE_BIN"),
-		PoolSize:   1,
+		PoolSize:   runtime.GOMAXPROCS(0),
 	}
 	if err := pkg.SetupLocalbox(options); err != nil {
 		panic(err)

@@ -45,15 +45,16 @@ func TestEngines(t *testing.T) {
 	engines, err := pkg.Globals.EngineManager.List()
 	require.NoError(t, err)
 	require.Greater(t, len(engines), 0)
-	sandbox := pkg.Sandbox(0)
 
 	for engineName := range engines {
 		engine, err := pkg.Globals.EngineManager.Get(engineName)
 		require.NoError(t, err)
 		t.Run(engineName, func(t *testing.T) {
-			require.NoError(t, sandbox.Init())
+			t.Parallel()
+			sandbox, err := pkg.Globals.SandboxPool.Acquire()
+			require.NoError(t, err)
 			t.Cleanup(func() {
-				require.NoError(t, sandbox.Cleanup())
+				require.NoError(t, pkg.Globals.SandboxPool.Release(sandbox))
 			})
 			require.NoError(t, sandbox.Mount(getFiles(t, engineName)))
 
