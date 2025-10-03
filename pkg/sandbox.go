@@ -48,7 +48,6 @@ func (s Sandbox) Init() error {
 }
 
 func (s Sandbox) Cleanup() error {
-	os.RemoveAll(s.metadataFilePath())
 	if err := exec.Command(
 		Globals.IsolateBin,
 		"--cg",
@@ -57,7 +56,7 @@ func (s Sandbox) Cleanup() error {
 	).Run(); err != nil {
 		return errors.Join(fmt.Errorf("could not cleanup sandbox %d", s.ID()), err)
 	}
-	return nil
+	return os.RemoveAll(s.metadataFilePath())
 }
 
 type SandboxFile struct {

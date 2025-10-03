@@ -1,5 +1,7 @@
 package pkg
 
+import "errors"
+
 type SandboxPool struct {
 	sandboxes chan Sandbox
 }
@@ -18,6 +20,10 @@ func NewSandboxPool(size int) *SandboxPool {
 func (p *SandboxPool) Acquire() (Sandbox, error) {
 	sandbox := <-p.sandboxes
 	if err := sandbox.Init(); err != nil {
+		// try to cleanup and return the sandbox to the pool
+		if err2 := p.Release(sandbox); err2 != nil {
+			panic(errors.Join(errors.New("could not release sandbox after failed init"), err2, err))
+		}
 		return -1, err
 	}
 	return sandbox, nil
