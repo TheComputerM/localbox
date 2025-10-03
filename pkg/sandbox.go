@@ -118,7 +118,7 @@ type SandboxPhaseMetadata struct {
 	WallTime int    `json:"wall_time" doc:"Wall time of the program in milliseconds" example:"1000"`
 	Memory   int    `json:"memory" doc:"Total memory use by the whole control group in KB" example:"256"`
 	MaxRSS   int    `json:"max_rss" doc:"Maximum resident set size of the program in KB" example:"128"`
-	Status   string `json:"status" doc:"Two-letter status code" example:"OK"`
+	Status   string `json:"status" doc:"Two-letter status code" example:"OK" enum:"OK,RE,SG,TO,XX,OE,CE"`
 	Message  string `json:"message" doc:"Human-readable message" example:"Executed"`
 	ExitCode int    `json:"exit_code" doc:"Exit code/signal from the program" example:"0"`
 }

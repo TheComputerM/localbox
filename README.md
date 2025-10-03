@@ -107,9 +107,9 @@ type SandboxPhaseMetadata struct {
 	WallTime int    `json:"wall_time" doc:"Wall time of the program in milliseconds" example:"1000"`
 	Memory   int    `json:"memory" doc:"Total memory use by the whole control group in KB" example:"256"`
 	MaxRSS   int    `json:"max_rss" doc:"Maximum resident set size of the program in KB" example:"128"`
-	Status   string `json:"status" doc:"Two-letter status code" example:"OK"`
+	Status   string `json:"status" doc:"Two-letter status code" example:"OK" enum:"OK,RE,SG,TO,XX,OE,CE"`
 	Message  string `json:"message" doc:"Human-readable message" example:"Executed"`
-	ExitCode int    `json:"exit_code" doc:"Exit code from the program" example:"0"`
+	ExitCode int    `json:"exit_code" doc:"Exit code/signal from the program" example:"0"`
 }
 
 type SandboxPhaseResults struct {
@@ -178,6 +178,17 @@ type SandboxPhase struct {
 ]
 ```
 
+Here are the status codes the result can have:
+
+- `OK`: no errors
+- `RE`: run-time error, i.e., exited with a non-zero exit code
+- `SG`: program died on a signal
+- `TO`: timed out
+- `XX`: internal error of the sandbox
+- `OE`: buffer limit exceeded for stdout/stderr
+- `CE`: compile error (only when executing engines)
+
 ## Security
 
 As both localbox and piston use isolate, they both make use of Linux namespaces, chroot, multiple unprivileged users, and cgroup for sandboxing and resource limiting; thereby providing [similar battle-tested security](https://github.com/engineer-man/piston/tree/master?tab=readme-ov-file#security).
+

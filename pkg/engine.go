@@ -66,20 +66,25 @@ func (e *Engine) Info() *EngineInfo {
 
 // Default compile options for engines
 var engineCompileOptions = &SandboxPhaseOptions{
-	MemoryLimit:  -1,
-	TimeLimit:    30000,
-	FilesLimit:   256,
+	MemoryLimit:   -1,
+	TimeLimit:     30000,
+	FilesLimit:    256,
 	FileSizeLimit: -1,
-	ProcessLimit: 256,
-	Network:      false,
-	Stdin:        "",
-	BufferLimit:  64,
+	ProcessLimit:  256,
+	Network:       false,
+	Stdin:         "",
+	BufferLimit:   64,
 }
 
 func (e *Engine) Run(s Sandbox, options *SandboxPhaseOptions) (*SandboxPhaseResults, error) {
 	if e.Compile != nil {
-		if _, err := s.Run(e.Compile, engineCompileOptions); err != nil {
+		compile, err := s.Run(e.Compile, engineCompileOptions)
+		if err != nil {
 			return nil, err
+		}
+		if compile.Status != "OK" {
+			compile.Status = "CE"
+			return compile, nil
 		}
 	}
 
