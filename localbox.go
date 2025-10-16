@@ -38,7 +38,7 @@ func main() {
 		router.Use(middleware.Logger)
 		router.Use(middleware.Recoverer)
 
-		config := huma.DefaultConfig("LocalBox", "1.0.0")
+		config := huma.DefaultConfig("LocalBox", "0.0.7")
 		config.Info.Description = `LocalBox is a **easy-to-host**, **general purpose** 
 		and **fast** code execution system for running **untrusted** code in sandboxes.
 		`
