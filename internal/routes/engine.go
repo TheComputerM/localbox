@@ -64,7 +64,7 @@ func UninstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, erro
 type ExecuteEngineRequest struct {
 	Engine string `path:"engine" example:"python"`
 	Body   struct {
-		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox"`
+		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox" required:"false"`
 		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
 	}
 }
@@ -87,8 +87,8 @@ func ExecuteEngine(
 
 type ExecuteCustomEngineRequest struct {
 	Body struct {
-		Engine  pkg.Engine              `json:"engine" doc:"Custom engine to use for execution"`
-		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox"`
+		Engine  pkg.Engine              `json:"engine" doc:"Custom engine definition to use for execution"`
+		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox" required:"false"`
 		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
 	}
 }
