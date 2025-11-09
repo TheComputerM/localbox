@@ -98,4 +98,5 @@ func TestEngineCompileError(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, "CE", result.Status)
+	require.Contains(t, result.Stderr, "main.c:1:1")
 }
