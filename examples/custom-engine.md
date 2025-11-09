@@ -1,4 +1,4 @@
-POST: /engine/custom
+POST: /engine
 
 ```jsonc
 {

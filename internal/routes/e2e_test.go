@@ -50,7 +50,7 @@ func exampleToAPITest(filename string) (*apitest, error) {
 	if err != nil {
 		return nil, err
 	}
-	input, output, found := strings.Cut(string(data), "---")
+	input, _, found := strings.Cut(string(data), "---")
 	if !found {
 		return nil, fmt.Errorf("invalid example format")
 	}
@@ -65,9 +65,9 @@ func exampleToAPITest(filename string) (*apitest, error) {
 	suite.Endpoint = matches[2]
 	suite.Input = matches[3]
 
-	outputRegex := regexp.MustCompile(codeblockRegex)
-	outputMatches := outputRegex.FindStringSubmatch(output)
-	suite.Expected = outputMatches[1]
+	// outputRegex := regexp.MustCompile(codeblockRegex)
+	// outputMatches := outputRegex.FindStringSubmatch(output)
+	// suite.Expected = outputMatches[1]
 
 	return suite, nil
 }
@@ -88,6 +88,7 @@ func TestE2E(t *testing.T) {
 		t.Run(strings.TrimSuffix(example.Name(), ".md"), func(t *testing.T) {
 			resp := api.Do(testdata.Method, testdata.Endpoint, strings.NewReader(testdata.Input))
 			require.Less(t, resp.Result().StatusCode, 300)
+			require.GreaterOrEqual(t, resp.Result().StatusCode, 200)
 		})
 	}
 }
