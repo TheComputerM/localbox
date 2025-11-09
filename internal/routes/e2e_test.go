@@ -1,23 +1,44 @@
 package routes_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/danielgtaylor/huma/v2/humatest"
 	"github.com/stretchr/testify/require"
+	"github.com/thecomputerm/localbox/internal"
+	"github.com/thecomputerm/localbox/internal/routes"
+	"github.com/thecomputerm/localbox/pkg"
 )
 
 const EXAMPLES_DIR = "../../examples"
 
+// initializes localbox for tests
+func init() {
+	if err := internal.InitCGroup(); err != nil {
+		panic(errors.Join(errors.New("failed to init cgroup"), err))
+	}
+	options := &pkg.LocalboxConfig{
+		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
+		IsolateBin: os.Getenv("SERVICE_ISOLATE_BIN"),
+		PoolSize:   runtime.GOMAXPROCS(0),
+	}
+	if err := pkg.SetupLocalbox(options); err != nil {
+		panic(err)
+	}
+}
+
 type apitest struct {
 	Method   string
 	Endpoint string
-	Input    any
-	Expected any
+	Input    string
+	Expected string
 }
 
 func exampleToAPITest(filename string) (*apitest, error) {
@@ -36,15 +57,15 @@ func exampleToAPITest(filename string) (*apitest, error) {
 
 	suite := &apitest{}
 
-	codeRegex := "```json[c]?" + `\s*({[\s\S]*?})\s*` + "```"
+	codeblockRegex := "```json[c]?" + `\s*({[\s\S]*?})\s*` + "```"
 
-	inputRegex := regexp.MustCompile(`([A-Z]+):\s*(\/\S+)\s+` + codeRegex)
+	inputRegex := regexp.MustCompile(`([A-Z]+):\s*(\/\S+)\s+` + codeblockRegex)
 	matches := inputRegex.FindStringSubmatch(input)
 	suite.Method = matches[1]
 	suite.Endpoint = matches[2]
 	suite.Input = matches[3]
 
-	outputRegex := regexp.MustCompile(codeRegex)
+	outputRegex := regexp.MustCompile(codeblockRegex)
 	outputMatches := outputRegex.FindStringSubmatch(output)
 	suite.Expected = outputMatches[1]
 
@@ -59,8 +80,14 @@ func TestE2E(t *testing.T) {
 		if example.IsDir() || !strings.HasSuffix(example.Name(), ".md") {
 			continue
 		}
-		data, err := exampleToAPITest(example.Name())
+		testdata, err := exampleToAPITest(example.Name())
 		require.NoError(t, err)
-		fmt.Println(data)
+		_, api := humatest.New(t)
+
+		routes.AddRoutes(api)
+		t.Run(strings.TrimSuffix(example.Name(), ".md"), func(t *testing.T) {
+			resp := api.Do(testdata.Method, testdata.Endpoint, strings.NewReader(testdata.Input))
+			require.Less(t, resp.Result().StatusCode, 300)
+		})
 	}
 }
