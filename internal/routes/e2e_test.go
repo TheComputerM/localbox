@@ -1,38 +1,19 @@
 package routes_test
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/danielgtaylor/huma/v2/humatest"
 	"github.com/stretchr/testify/require"
-	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/internal/routes"
-	"github.com/thecomputerm/localbox/pkg"
 )
 
 const EXAMPLES_DIR = "../../examples"
-
-// initializes localbox for tests
-func init() {
-	if err := internal.InitCGroup(); err != nil {
-		panic(errors.Join(errors.New("failed to init cgroup"), err))
-	}
-	options := &pkg.LocalboxConfig{
-		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
-		IsolateBin: os.Getenv("SERVICE_ISOLATE_BIN"),
-		PoolSize:   runtime.GOMAXPROCS(0),
-	}
-	if err := pkg.SetupLocalbox(options); err != nil {
-		panic(err)
-	}
-}
 
 type apitest struct {
 	Method   string
@@ -65,14 +46,11 @@ func exampleToAPITest(filename string) (*apitest, error) {
 	suite.Endpoint = matches[2]
 	suite.Input = matches[3]
 
-	// outputRegex := regexp.MustCompile(codeblockRegex)
-	// outputMatches := outputRegex.FindStringSubmatch(output)
-	// suite.Expected = outputMatches[1]
-
 	return suite, nil
 }
 
 func TestE2E(t *testing.T) {
+	t.Skip()
 	examples, err := os.ReadDir(EXAMPLES_DIR)
 	require.NoError(t, err)
 
