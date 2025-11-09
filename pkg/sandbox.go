@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -251,11 +252,15 @@ func (s Sandbox) Run(
 }
 
 // Run a command on the sandbox in a shell without any isolation or limits
-func (s Sandbox) UnsafeRun(command *SandboxCommand) error {
+func (s Sandbox) UnsafeRun(command *SandboxCommand) (string, string, error) {
 	wrapper := []string{Globals.ShellBin, "-c", command.Command}
 	cmd := exec.Command("nix", buildNixShell(command.Packages, wrapper)...)
+	var stdout, stderr bytes.Buffer
 	cmd.Dir = s.BoxPath()
-	return cmd.Run()
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
 }
 
 func buildNixShell(packages, run []string) []string {
