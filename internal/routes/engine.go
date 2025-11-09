@@ -61,12 +61,14 @@ func UninstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, erro
 	return nil, nil
 }
 
+type ExecuteEngineRequestBody struct {
+	Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox" required:"false"`
+	Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
+}
+
 type ExecuteEngineRequest struct {
 	Engine string `path:"engine" example:"python"`
-	Body   struct {
-		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox" required:"false"`
-		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
-	}
+	Body   ExecuteEngineRequestBody
 }
 
 type ExecuteEngineResponse struct {
@@ -82,14 +84,13 @@ func ExecuteEngine(
 		return nil, err
 	}
 
-	return executeWithEngine(engine, &input.Body.Options, input.Body.Files)
+	return executeInEngine(engine, &input.Body.Options, input.Body.Files)
 }
 
 type ExecuteCustomEngineRequest struct {
 	Body struct {
-		Engine  pkg.Engine              `json:"engine" doc:"Custom engine definition to use for execution"`
-		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox" required:"false"`
-		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
+		Engine pkg.Engine `json:"engine" doc:"Custom engine definition to use for execution"`
+		ExecuteEngineRequestBody
 	}
 }
 
@@ -97,10 +98,10 @@ func ExecuteCustomEngine(
 	ctx context.Context,
 	input *ExecuteCustomEngineRequest,
 ) (*ExecuteEngineResponse, error) {
-	return executeWithEngine(&input.Body.Engine, &input.Body.Options, input.Body.Files)
+	return executeInEngine(&input.Body.Engine, &input.Body.Options, input.Body.Files)
 }
 
-func executeWithEngine(engine *pkg.Engine, options *pkg.SandboxPhaseOptions, files []pkg.SandboxFile) (*ExecuteEngineResponse, error) {
+func executeInEngine(engine *pkg.Engine, options *pkg.SandboxPhaseOptions, files []pkg.SandboxFile) (*ExecuteEngineResponse, error) {
 	sandbox, err := pkg.Globals.SandboxPool.Acquire()
 	if err != nil {
 		return nil, err
