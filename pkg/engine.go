@@ -21,7 +21,7 @@ type EngineInfo struct {
 }
 
 type Engine struct {
-	Compile *SandboxPhase   `json:"compile"`
+	Compile *SandboxCommand `json:"compile"`
 	Execute *SandboxPhase   `json:"execute"`
 	Meta    *EngineMetadata `json:"meta"`
 }
@@ -64,27 +64,11 @@ func (e *Engine) Info() *EngineInfo {
 	}
 }
 
-// Default compile options for engines
-var engineCompileOptions = &SandboxPhaseOptions{
-	MemoryLimit:   -1,
-	TimeLimit:     30000,
-	FilesLimit:    256,
-	FileSizeLimit: -1,
-	ProcessLimit:  256,
-	Network:       false,
-	Stdin:         "",
-	BufferLimit:   64,
-}
-
 func (e *Engine) Run(s Sandbox, options *SandboxPhaseOptions) (*SandboxPhaseResults, error) {
 	if e.Compile != nil {
-		compile, err := s.Run(e.Compile, engineCompileOptions)
+		err := s.UnsafeRun(e.Compile)
 		if err != nil {
-			return nil, err
-		}
-		if compile.Status != "OK" {
-			compile.Status = "CE"
-			return compile, nil
+			return nil, errors.Join(errors.New("engine compile error"), err)
 		}
 	}
 

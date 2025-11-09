@@ -83,8 +83,10 @@ func TestSandboxFileAccess(t *testing.T) {
 	defaults.SetDefaults(options)
 	result, err := box.Run(
 		&pkg.SandboxPhase{
-			Command:  "cat hello.txt",
-			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			SandboxCommand: pkg.SandboxCommand{
+				Command:  "cat hello.txt",
+				Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			},
 		},
 		options,
 	)
@@ -107,8 +109,10 @@ func TestSandbox_Stdin(t *testing.T) {
 	options.Stdin = "Hello World"
 	result, err := box.Run(
 		&pkg.SandboxPhase{
-			Command:  "tee output.txt",
-			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			SandboxCommand: pkg.SandboxCommand{
+				Command:  "tee output.txt",
+				Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			},
 		},
 		options,
 	)
@@ -135,8 +139,10 @@ func TestSandbox_WallTimeLimit(t *testing.T) {
 	options.WallTimeLimit = 1000
 	result, err := box.Run(
 		&pkg.SandboxPhase{
-			Command:  "sleep 2",
-			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			SandboxCommand: pkg.SandboxCommand{
+				Command:  "sleep 2",
+				Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			},
 		},
 		options,
 	)
@@ -158,8 +164,10 @@ func TestSandbox_FileSizeLimit(t *testing.T) {
 
 	result, err := box.Run(
 		&pkg.SandboxPhase{
-			Command:  "truncate -s 2K filename.txt",
-			Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			SandboxCommand: pkg.SandboxCommand{
+				Command:  "truncate -s 2K filename.txt",
+				Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+			},
 		},
 		options,
 	)
@@ -167,4 +175,27 @@ func TestSandbox_FileSizeLimit(t *testing.T) {
 
 	require.Equal(t, "SG", result.Status)
 	require.Equal(t, 25, result.ExitCode)
+}
+
+func TestSandbox_UnsafeRun(t *testing.T) {
+	box := pkg.Sandbox(0)
+	require.NoError(t, box.Init())
+	t.Cleanup(func() {
+		require.NoError(t, box.Cleanup())
+	})
+
+	require.NoError(t, box.Mount([]pkg.SandboxFile{
+		{
+			Name:    "hello.txt",
+			Content: "The file should be renamed to modified.txt",
+		},
+	}))
+
+	require.NoError(t, box.UnsafeRun(&pkg.SandboxCommand{
+		Command:  "mv hello.txt modified.txt",
+		Packages: []string{"nixpkgs/nixos-25.05#busybox"},
+	}))
+
+	require.FileExists(t, filepath.Join(box.BoxPath(), "modified.txt"))
+	require.NoFileExists(t, filepath.Join(box.BoxPath(), "hello.txt"))
 }

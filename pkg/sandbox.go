@@ -167,10 +167,14 @@ type SandboxPhaseResults struct {
 	Stderr string `json:"stderr" doc:"stderr of the program" example:""`
 }
 
+type SandboxCommand struct {
+	Command  string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
+	Packages []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"nixpkgs#cowsay,nixpkgs/nixos-25.05#busybox"`
+}
+
 type SandboxPhase struct {
-	Command   string   `json:"command" doc:"Command to execute in the sandbox" example:"cat hello.txt"`
-	SkipShell bool     `json:"skip_shell,omitempty" doc:"Doesn't use a shell to run the command to if true, can be used to get more accurate results" default:"false"`
-	Packages  []string `json:"packages,omitempty" doc:"Nix packages to install in the sandbox" example:"nixpkgs#cowsay,nixpkgs/nixos-25.05#busybox"`
+	SandboxCommand
+	SkipShell bool `json:"skip_shell,omitempty" doc:"Doesn't use a shell to run the command to if true, can be used to get more accurate results" default:"false"`
 }
 
 type SandboxPhaseOptions struct {
@@ -186,7 +190,7 @@ type SandboxPhaseOptions struct {
 	Environment   map[string]string `json:"environment,omitempty" doc:"Environment variables to set in the sandbox" example:"{}"`
 }
 
-// Run a SandboxPhase with it's options inside the sandbox
+// Run a command inside the isolated sandbox which the listed nix packages installed
 func (s Sandbox) Run(
 	phase *SandboxPhase,
 	options *SandboxPhaseOptions,
@@ -244,6 +248,14 @@ func (s Sandbox) Run(
 	}
 
 	return results, nil
+}
+
+// Run a command on the sandbox in a shell without any isolation or limits
+func (s Sandbox) UnsafeRun(command *SandboxCommand) error {
+	wrapper := []string{Globals.ShellBin, "-c", command.Command}
+	cmd := exec.Command("nix", buildNixShell(command.Packages, wrapper)...)
+	cmd.Dir = s.BoxPath()
+	return cmd.Run()
 }
 
 func buildNixShell(packages, run []string) []string {
