@@ -252,7 +252,7 @@ func (s Sandbox) Run(
 }
 
 // Run a command on the sandbox in a shell without any isolation or limits
-func (s Sandbox) UnsafeRun(command *SandboxCommand) (string, string, error) {
+func (s Sandbox) UnsafeRun(command *SandboxCommand) (*SandboxPhaseResults, bool) {
 	wrapper := []string{Globals.ShellBin, "-c", command.Command}
 	cmd := exec.Command("nix", buildNixShell(command.Packages, wrapper)...)
 	var stdout, stderr bytes.Buffer
@@ -260,7 +260,18 @@ func (s Sandbox) UnsafeRun(command *SandboxCommand) (string, string, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-	return stdout.String(), stderr.String(), err
+	if err == nil {
+		return nil, true
+	}
+	return &SandboxPhaseResults{
+		Stdout: stdout.String(),
+		Stderr: stderr.String(),
+		SandboxPhaseMetadata: SandboxPhaseMetadata{
+			ExitCode: -1,
+			Status:   "CE",
+			Message:  fmt.Sprintf("compile error: %s", err.Error()),
+		},
+	}, false
 }
 
 func buildNixShell(packages, run []string) []string {

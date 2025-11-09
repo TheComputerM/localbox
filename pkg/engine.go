@@ -66,16 +66,8 @@ func (e *Engine) Info() *EngineInfo {
 
 func (e *Engine) Run(s Sandbox, options *SandboxPhaseOptions) (*SandboxPhaseResults, error) {
 	if e.Compile != nil {
-		if stdout, stderr, err := s.UnsafeRun(e.Compile); err != nil {
-			return &SandboxPhaseResults{
-				SandboxPhaseMetadata: SandboxPhaseMetadata{
-					ExitCode: -1,
-					Status:   "CE",
-					Message:  fmt.Sprintf("compile error: %s", err.Error()),
-				},
-				Stdout: stdout,
-				Stderr: stderr,
-			}, nil
+		if result, ok := s.UnsafeRun(e.Compile); !ok {
+			return result, nil
 		}
 	}
 

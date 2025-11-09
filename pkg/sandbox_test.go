@@ -191,11 +191,11 @@ func TestSandbox_UnsafeRun(t *testing.T) {
 		},
 	}))
 
-	_, _, err := box.UnsafeRun(&pkg.SandboxCommand{
+	_, ok := box.UnsafeRun(&pkg.SandboxCommand{
 		Command:  "mv hello.txt modified.txt",
 		Packages: []string{"nixpkgs/nixos-25.05#busybox"},
 	})
-	require.NoError(t, err)
+	require.True(t, ok)
 
 	require.FileExists(t, filepath.Join(box.BoxPath(), "modified.txt"))
 	require.NoFileExists(t, filepath.Join(box.BoxPath(), "hello.txt"))
