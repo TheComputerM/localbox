@@ -115,6 +115,15 @@ func main() {
 			Tags:        []string{"Engine"},
 		}, routes.ExecuteEngine)
 
+		huma.Register(app, huma.Operation{
+			OperationID: "execute-custom-engine",
+			Method:      http.MethodPost,
+			Path:        "/engine/custom",
+			Summary:     "Execute Custom Engine",
+			Description: `Execute a custom engine with an execution phase whose options can be overridden.`,
+			Tags:        []string{"Engine"},
+		}, routes.ExecuteCustomEngine)
+
 		h.OnStart(func() {
 			fmt.Printf("LocalBox is up and running on :%d\n", o.Port)
 			http.ListenAndServe(fmt.Sprintf(":%d", o.Port), router)

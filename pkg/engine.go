@@ -11,7 +11,7 @@ import (
 )
 
 type EngineMetadata struct {
-	RunFile string `json:"run_file" doc:"Name of main file that is executed by the engine h" example:"main.py"`
+	RunFile string `json:"run_file" doc:"Name of used to replace the '@' file when the engine is executed" example:"main.py"`
 	Version string `json:"version" doc:"Version of the runtime or compiler used by the engine" example:"3.12.11"`
 }
 
@@ -21,9 +21,9 @@ type EngineInfo struct {
 }
 
 type Engine struct {
-	Compile *SandboxCommand `json:"compile"`
-	Execute *SandboxPhase   `json:"execute"`
-	Meta    *EngineMetadata `json:"meta"`
+	Compile *SandboxCommand `json:"compile" doc:"Optional compilation phase before execution"`
+	Execute *SandboxPhase   `json:"execute" doc:"Main execution phase"`
+	Meta    *EngineMetadata `json:"meta" doc:"Metadata about the engine"`
 }
 
 func (e *Engine) packages() []string {

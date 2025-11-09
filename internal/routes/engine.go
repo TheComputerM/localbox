@@ -82,23 +82,42 @@ func ExecuteEngine(
 		return nil, err
 	}
 
+	return executeWithEngine(engine, &input.Body.Options, input.Body.Files)
+}
+
+type ExecuteCustomEngineRequest struct {
+	Body struct {
+		Engine  pkg.Engine              `json:"engine" doc:"Custom engine to use for execution"`
+		Options pkg.SandboxPhaseOptions `json:"options" doc:"Options and limits for the sandbox"`
+		Files   []pkg.SandboxFile       `json:"files" doc:"Files to mount in the sandbox before execution"`
+	}
+}
+
+func ExecuteCustomEngine(
+	ctx context.Context,
+	input *ExecuteCustomEngineRequest,
+) (*ExecuteEngineResponse, error) {
+	return executeWithEngine(&input.Body.Engine, &input.Body.Options, input.Body.Files)
+}
+
+func executeWithEngine(engine *pkg.Engine, options *pkg.SandboxPhaseOptions, files []pkg.SandboxFile) (*ExecuteEngineResponse, error) {
 	sandbox, err := pkg.Globals.SandboxPool.Acquire()
 	if err != nil {
 		return nil, err
 	}
 	defer pkg.Globals.SandboxPool.Release(sandbox)
 
-	for i := range input.Body.Files {
-		if input.Body.Files[i].Name == "@" {
-			input.Body.Files[i].Name = engine.Meta.RunFile
+	for i := range files {
+		if files[i].Name == "@" {
+			files[i].Name = engine.Meta.RunFile
 		}
 	}
 
-	if err := sandbox.Mount(input.Body.Files); err != nil {
+	if err := sandbox.Mount(files); err != nil {
 		return nil, err
 	}
 
-	output, err := engine.Run(sandbox, &input.Body.Options)
+	output, err := engine.Run(sandbox, options)
 	if err != nil {
 		return nil, err
 	}
