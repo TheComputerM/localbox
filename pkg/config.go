@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 type LocalboxConfig struct {
@@ -21,6 +22,17 @@ type globals struct {
 }
 
 var Globals globals
+
+func init() {
+	if err := SetupLocalbox(&LocalboxConfig{
+		EngineRoot: os.Getenv("SERVICE_ENGINE_ROOT"),
+		IsolateBin: os.Getenv("SERVICE_ISOLATE_BIN"),
+		PoolSize:   runtime.GOMAXPROCS(0),
+	}); err != nil {
+		panic(err)
+	}
+
+}
 
 func SetupLocalbox(options *LocalboxConfig) error {
 	engineRoot, err := filepath.Abs(options.EngineRoot)
