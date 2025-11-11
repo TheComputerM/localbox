@@ -35,7 +35,7 @@ func AddRoutes(app huma.API) {
 	huma.Register(app, huma.Operation{
 		OperationID: "execute-custom-engine",
 		Method:      http.MethodPost,
-		Path:        "/engine",
+		Path:        "/engine/custom/execute",
 		Summary:     "Execute Custom Engine",
 		Description: `Execute a custom engine with an execution phase whose options can be overridden.`,
 		Tags:        []string{"Engine"},
