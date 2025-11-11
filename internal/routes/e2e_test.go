@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/humatest"
 	"github.com/stretchr/testify/require"
 	"github.com/thecomputerm/localbox/internal"
@@ -59,6 +60,7 @@ func exampleToAPITest(filename string) (*apitest, error) {
 }
 
 func TestE2E(t *testing.T) {
+	huma.DefaultArrayNullable = false
 	examples, err := os.ReadDir(EXAMPLES_DIR)
 	require.NoError(t, err)
 
