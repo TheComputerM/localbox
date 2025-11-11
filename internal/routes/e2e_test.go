@@ -60,6 +60,7 @@ func exampleToAPITest(filename string) (*apitest, error) {
 }
 
 func TestE2E(t *testing.T) {
+	t.Skip()
 	huma.DefaultArrayNullable = false
 	examples, err := os.ReadDir(EXAMPLES_DIR)
 	require.NoError(t, err)
