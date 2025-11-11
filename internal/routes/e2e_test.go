@@ -1,6 +1,7 @@
 package routes_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,8 +11,16 @@ import (
 
 	"github.com/danielgtaylor/huma/v2/humatest"
 	"github.com/stretchr/testify/require"
+	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/internal/routes"
 )
+
+// initializes localbox for tests
+func init() {
+	if err := internal.InitCGroup(); err != nil {
+		panic(errors.Join(errors.New("failed to init cgroup"), err))
+	}
+}
 
 const EXAMPLES_DIR = "../../examples"
 
@@ -50,7 +59,6 @@ func exampleToAPITest(filename string) (*apitest, error) {
 }
 
 func TestE2E(t *testing.T) {
-	t.Skip()
 	examples, err := os.ReadDir(EXAMPLES_DIR)
 	require.NoError(t, err)
 
