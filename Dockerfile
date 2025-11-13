@@ -28,6 +28,8 @@ COPY --from=build /output/profile/bin/ /usr/local/bin/
 COPY ./engines /lib/localbox/engines
 COPY ./isolate.conf /etc/isolate
 
+RUN nix flake prefetch nixpkgs/nixos-25.05
+
 ENV SHELL=/bin/sh
 ENV ISOLATE_CONFIG_FILE=/etc/isolate
 
