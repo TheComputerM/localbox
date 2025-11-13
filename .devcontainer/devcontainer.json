@@ -19,7 +19,8 @@
 		"SERVICE_PORT": "3000",
 		"SERVICE_ISOLATE_BIN": "/home/vscode/.nix-profile/bin/isolate",
 		"SERVICE_ENGINE_ROOT": "${containerWorkspaceFolder}/engines",
-		"ISOLATE_CONFIG_FILE": "${containerWorkspaceFolder}/isolate.conf"
+		"ISOLATE_CONFIG_FILE": "${containerWorkspaceFolder}/isolate.conf",
+		"LOG_LEVEL": "debug"
 	},
 	"customizations": {
 		"vscode": {

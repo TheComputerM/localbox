@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -45,6 +46,7 @@ func (s Sandbox) Init() error {
 	).Run(); err != nil {
 		return errors.Join(fmt.Errorf("could not init sandbox %d", s.ID()), err)
 	}
+	slog.Info("Sandbox init", slog.Int("id", s.ID()))
 	return nil
 }
 
@@ -57,6 +59,7 @@ func (s Sandbox) Cleanup() error {
 	).Run(); err != nil {
 		return errors.Join(fmt.Errorf("could not cleanup sandbox %d", s.ID()), err)
 	}
+	slog.Info("Sandbox cleanup", slog.Int("id", s.ID()))
 	return os.RemoveAll(s.metadataFilePath())
 }
 
@@ -110,6 +113,8 @@ func (s Sandbox) Mount(files []SandboxFile) error {
 		}
 	}
 
+	slog.Debug("Mounted files to sandbox", slog.Int("sandbox", s.ID()), slog.Int("file_count", len(files)))
+
 	return nil
 }
 
@@ -159,6 +164,7 @@ func (s Sandbox) parseMetadata() (*SandboxPhaseMetadata, error) {
 			output.ExitCode, _ = strconv.Atoi(value)
 		}
 	}
+	slog.Debug("Read and parsed metadata file", slog.Int("sandbox", s.ID()))
 	return output, nil
 }
 
@@ -222,6 +228,8 @@ func (s Sandbox) Run(
 
 	isOutputBufferExceeded := false
 
+	slog.Info("Running", "command", cmd.String())
+
 	if err := cmd.Run(); err != nil {
 		if _, found := os.Stat(s.metadataFilePath()); errors.Is(found, os.ErrNotExist) {
 			// throw error if metadata file doesn't exist
@@ -259,6 +267,7 @@ func (s Sandbox) UnsafeRun(command *SandboxCommand) (result *SandboxPhaseResults
 	cmd.Dir = s.BoxPath()
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	slog.Info("Running unsafe", "command", cmd.String())
 	err := cmd.Run()
 	if err == nil {
 		return nil, true

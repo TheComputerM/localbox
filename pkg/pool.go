@@ -1,6 +1,9 @@
 package pkg
 
-import "errors"
+import (
+	"errors"
+	"log/slog"
+)
 
 type SandboxPool struct {
 	sandboxes chan Sandbox
@@ -19,6 +22,7 @@ func NewSandboxPool(size int) *SandboxPool {
 // Gets a new sandbox from the pool and initializes it
 func (p *SandboxPool) Acquire() (Sandbox, error) {
 	sandbox := <-p.sandboxes
+	slog.Info("Acquired from pool", slog.Int("sandbox", sandbox.ID()))
 	if err := sandbox.Init(); err != nil {
 		// try to cleanup and return the sandbox to the pool
 		if err2 := p.Release(sandbox); err2 != nil {
@@ -35,6 +39,7 @@ func (p *SandboxPool) Release(s Sandbox) error {
 		return err
 	}
 	p.sandboxes <- s
+	slog.Info("Released back to pool", slog.Int("sandbox", s.ID()))
 	return nil
 }
 
