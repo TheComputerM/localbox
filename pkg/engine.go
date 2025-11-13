@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path"
 	"slices"
+	"strings"
 )
 
 type EngineMetadata struct {
@@ -118,7 +119,7 @@ func (m *EngineManager) List() (map[string]*EngineInfo, error) {
 		if path.Ext(name) != ".json" {
 			continue
 		}
-		name = name[:len(name)-len(".json")]
+		name = strings.TrimSuffix(name, ".json")
 		engine, err := m.Get(name)
 		if err != nil {
 			return nil, err

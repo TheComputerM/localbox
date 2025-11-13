@@ -16,13 +16,6 @@ import (
 	"github.com/thecomputerm/localbox/internal/routes"
 )
 
-// initializes localbox for tests
-func init() {
-	if err := internal.InitCGroup(); err != nil {
-		panic(errors.Join(errors.New("failed to init cgroup"), err))
-	}
-}
-
 const EXAMPLES_DIR = "../../examples"
 
 type apitest struct {
@@ -80,4 +73,12 @@ func TestE2E(t *testing.T) {
 			require.GreaterOrEqual(t, resp.Result().StatusCode, 200)
 		})
 	}
+}
+
+func TestMain(m *testing.M) {
+	if err := internal.InitCGroup(); err != nil {
+		panic(errors.Join(errors.New("failed to init cgroup"), err))
+	}
+	code := m.Run()
+	os.Exit(code)
 }
