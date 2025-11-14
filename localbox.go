@@ -27,10 +27,15 @@ func init() {
 	}
 }
 
+type Options struct {
+	pkg.LocalboxOptions
+	Port int `json:"port" help:"Port to listen on" short:"p" default:"2000"`
+}
+
 func main() {
 	huma.DefaultArrayNullable = false
-	cli := humacli.New(func(h humacli.Hooks, o *pkg.LocalboxConfig) {
-		if err := pkg.SetupLocalbox(o); err != nil {
+	cli := humacli.New(func(h humacli.Hooks, o *Options) {
+		if err := pkg.SetOptions(&o.LocalboxOptions); err != nil {
 			log.Fatal(err)
 		}
 
@@ -51,7 +56,7 @@ func main() {
 			Summary:     "System Info",
 			Description: `Get system information and configuration data.`,
 		}, func(ctx context.Context, _ *struct{}) (*routes.SystemInfoResponse, error) {
-			return routes.GetSystemInfo(ctx, o)
+			return routes.GetSystemInfo(ctx, &o.LocalboxOptions)
 		})
 
 		routes.AddRoutes(app)

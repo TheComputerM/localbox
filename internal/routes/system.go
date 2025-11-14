@@ -9,14 +9,14 @@ import (
 
 type SystemInfoResponse struct {
 	Body struct {
-		AvailableSandboxes int                 `json:"available_sandboxes" example:"10" doc:"Number of sandboxes currently available"`
-		Configuration      *pkg.LocalboxConfig `json:"configuration" doc:"Variables with which localbox was configured"`
+		AvailableSandboxes int                  `json:"available_sandboxes" example:"10" doc:"Number of sandboxes currently available"`
+		Configuration      *pkg.LocalboxOptions `json:"configuration" doc:"Variables with which localbox was configured"`
 	}
 }
 
-func GetSystemInfo(ctx context.Context, options *pkg.LocalboxConfig) (*SystemInfoResponse, error) {
+func GetSystemInfo(ctx context.Context, options *pkg.LocalboxOptions) (*SystemInfoResponse, error) {
 	output := &SystemInfoResponse{}
-	output.Body.AvailableSandboxes = pkg.Globals.SandboxPool.Available()
+	output.Body.AvailableSandboxes = pkg.Instance().SandboxPool.Available()
 	output.Body.Configuration = options
 	return output, nil
 }

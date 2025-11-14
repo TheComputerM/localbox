@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetEngine(t *testing.T) {
-	engine, err := pkg.Globals.EngineManager.Get("python")
+	engine, err := pkg.Instance().EngineManager.Get("python")
 	require.NoError(t, err)
 	require.NotNil(t, engine)
 }
@@ -42,19 +42,19 @@ func TestEngines(t *testing.T) {
 		return files
 	}
 
-	engines, err := pkg.Globals.EngineManager.List()
+	engines, err := pkg.Instance().EngineManager.List()
 	require.NoError(t, err)
 	require.Greater(t, len(engines), 0)
 
 	for engineName := range engines {
-		engine, err := pkg.Globals.EngineManager.Get(engineName)
+		engine, err := pkg.Instance().EngineManager.Get(engineName)
 		require.NoError(t, err)
 		t.Run(engineName, func(t *testing.T) {
 			t.Parallel()
-			sandbox, err := pkg.Globals.SandboxPool.Acquire()
+			sandbox, err := pkg.Instance().SandboxPool.Acquire()
 			require.NoError(t, err)
 			t.Cleanup(func() {
-				require.NoError(t, pkg.Globals.SandboxPool.Release(sandbox))
+				require.NoError(t, pkg.Instance().SandboxPool.Release(sandbox))
 			})
 			require.NoError(t, sandbox.Mount(getFiles(t, engineName)))
 
@@ -76,7 +76,7 @@ func TestEngines(t *testing.T) {
 }
 
 func TestEngineCompileError(t *testing.T) {
-	engine, err := pkg.Globals.EngineManager.Get("c")
+	engine, err := pkg.Instance().EngineManager.Get("c")
 	require.NoError(t, err)
 	require.NoError(t, engine.Install())
 

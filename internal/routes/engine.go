@@ -13,7 +13,7 @@ type ListEnginesResponse struct {
 }
 
 func ListEngines(ctx context.Context, _ *struct{}) (*ListEnginesResponse, error) {
-	engines, err := pkg.Globals.EngineManager.List()
+	engines, err := pkg.Instance().EngineManager.List()
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ type EngineInfoResponse struct {
 }
 
 func EngineInfo(ctx context.Context, input *EngineRequest) (*EngineInfoResponse, error) {
-	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
+	engine, err := pkg.Instance().EngineManager.Get(input.Engine)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func EngineInfo(ctx context.Context, input *EngineRequest) (*EngineInfoResponse,
 }
 
 func InstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, error) {
-	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
+	engine, err := pkg.Instance().EngineManager.Get(input.Engine)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func InstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, error)
 }
 
 func UninstallEngine(ctx context.Context, input *EngineRequest) (*struct{}, error) {
-	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
+	engine, err := pkg.Instance().EngineManager.Get(input.Engine)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func ExecuteEngine(
 	ctx context.Context,
 	input *ExecuteEngineRequest,
 ) (*ExecuteEngineResponse, error) {
-	engine, err := pkg.Globals.EngineManager.Get(input.Engine)
+	engine, err := pkg.Instance().EngineManager.Get(input.Engine)
 	if err != nil {
 		return nil, err
 	}
@@ -102,11 +102,12 @@ func ExecuteCustomEngine(
 }
 
 func executeInEngine(engine *pkg.Engine, options *pkg.SandboxPhaseOptions, files []pkg.SandboxFile) (*ExecuteEngineResponse, error) {
-	sandbox, err := pkg.Globals.SandboxPool.Acquire()
+	pool := pkg.Instance().SandboxPool
+	sandbox, err := pool.Acquire()
 	if err != nil {
 		return nil, err
 	}
-	defer pkg.Globals.SandboxPool.Release(sandbox)
+	defer pool.Release(sandbox)
 
 	for i := range files {
 		if files[i].Name == "@" {

@@ -24,12 +24,12 @@ type ExecuteResponse struct {
 }
 
 func Execute(ctx context.Context, input *ExecuteRequest) (*ExecuteResponse, error) {
-	sandbox, err := pkg.Globals.SandboxPool.Acquire()
+	pool := pkg.Instance().SandboxPool
+	sandbox, err := pool.Acquire()
 	if err != nil {
 		return nil, err
 	}
-	defer pkg.Globals.SandboxPool.Release(sandbox)
-
+	defer pool.Release(sandbox)
 	if err := sandbox.Mount(input.Body.Files); err != nil {
 		return nil, err
 	}

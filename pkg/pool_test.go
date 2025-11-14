@@ -9,7 +9,7 @@ import (
 )
 
 func TestSandboxPool(t *testing.T) {
-	pool := pkg.Globals.SandboxPool
+	pool := pkg.Instance().SandboxPool
 
 	t.Run("one", func(t *testing.T) {
 		sandbox, err := pool.Acquire()

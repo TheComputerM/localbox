@@ -39,7 +39,7 @@ func (s Sandbox) metadataFilePath() string {
 
 func (s Sandbox) Init() error {
 	if err := exec.Command(
-		Globals.IsolateBin,
+		Instance().IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--init",
@@ -52,7 +52,7 @@ func (s Sandbox) Init() error {
 
 func (s Sandbox) Cleanup() error {
 	if err := exec.Command(
-		Globals.IsolateBin,
+		Instance().IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--cleanup",
@@ -261,7 +261,7 @@ func (s Sandbox) Run(
 
 // Run a command on the sandbox in a shell without any isolation or limits
 func (s Sandbox) UnsafeRun(command *SandboxCommand) (result *SandboxPhaseResults, ok bool) {
-	wrapper := []string{Globals.ShellBin, "-c", command.Command}
+	wrapper := []string{Instance().ShellBin, "-c", command.Command}
 	cmd := exec.Command("nix", buildNixShell(command.Packages, wrapper)...)
 	var stdout, stderr bytes.Buffer
 	cmd.Dir = s.BoxPath()
@@ -304,7 +304,7 @@ func buildIsolateCommand(
 	}
 
 	command := []string{
-		Globals.IsolateBin,
+		Instance().IsolateBin,
 		"--cg",
 		"-s",
 		"--meta=" + s.metadataFilePath(),
@@ -357,7 +357,7 @@ func buildIsolateCommand(
 	if phase.SkipShell {
 		command = append(command, phase.Command)
 	} else {
-		command = append(command, Globals.ShellBin, "-c", phase.Command)
+		command = append(command, Instance().ShellBin, "-c", phase.Command)
 	}
 
 	return command
