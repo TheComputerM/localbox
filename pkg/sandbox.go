@@ -276,7 +276,7 @@ func (s Sandbox) UnsafeRun(command *SandboxCommand) (result *SandboxPhaseResults
 		Stdout: stdout.String(),
 		Stderr: stderr.String(),
 		SandboxPhaseMetadata: SandboxPhaseMetadata{
-			ExitCode: -1,
+			ExitCode: 1,
 			Status:   "CE",
 			Message:  fmt.Sprintf("compile error: %s", err.Error()),
 		},
