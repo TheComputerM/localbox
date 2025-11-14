@@ -18,7 +18,7 @@ import (
 	"github.com/thecomputerm/localbox/pkg"
 )
 
-const VERSION = "0.1.3"
+const VERSION = "0.1.4"
 
 const DESCRIPTION = `LocalBox is a easy-to-host, general purpose and fast code execution system for running untrusted code and measuring metrics in sandboxes.`
 
