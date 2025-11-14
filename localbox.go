@@ -18,6 +18,10 @@ import (
 	"github.com/thecomputerm/localbox/pkg"
 )
 
+const VERSION = "0.1.2"
+
+const DESCRIPTION = `LocalBox is a easy-to-host, general purpose and fast code execution system for running untrusted code and measuring metrics in sandboxes.`
+
 func init() {
 	if os.Getuid() != 0 {
 		log.Println("WARNING: LocalBox is not running as root")
@@ -43,10 +47,8 @@ func main() {
 		router.Use(middleware.Logger)
 		router.Use(middleware.Recoverer)
 
-		config := huma.DefaultConfig("LocalBox", "0.1.2")
-		config.Info.Description = `LocalBox is a **easy-to-host**, **general purpose** 
-		and **fast** code execution system for running **untrusted** code in sandboxes.
-		`
+		config := huma.DefaultConfig("LocalBox", VERSION)
+		config.Info.Description = DESCRIPTION
 		app := humachi.New(router, config)
 
 		huma.Register(app, huma.Operation{
@@ -66,6 +68,10 @@ func main() {
 			http.ListenAndServe(fmt.Sprintf(":%d", o.Port), router)
 		})
 	})
+
+	cmd := cli.Root()
+	cmd.Version = VERSION
+	cmd.Long = DESCRIPTION
 
 	cli.Run()
 }
