@@ -1,7 +1,6 @@
-package routes_test
+package pkg_test
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,14 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/humatest"
 	"github.com/stretchr/testify/require"
-	"github.com/thecomputerm/localbox/internal"
 	"github.com/thecomputerm/localbox/internal/routes"
 )
 
-const EXAMPLES_DIR = "../../examples"
+const EXAMPLES_DIR = "../examples"
 
 type apitest struct {
 	Method   string
@@ -53,8 +50,6 @@ func exampleToAPITest(filename string) (*apitest, error) {
 }
 
 func TestE2E(t *testing.T) {
-	t.Skip()
-	huma.DefaultArrayNullable = false
 	examples, err := os.ReadDir(EXAMPLES_DIR)
 	require.NoError(t, err)
 
@@ -68,17 +63,10 @@ func TestE2E(t *testing.T) {
 
 		routes.AddRoutes(api)
 		t.Run(strings.TrimSuffix(example.Name(), ".md"), func(t *testing.T) {
+			t.Parallel()
 			resp := api.Do(testdata.Method, testdata.Endpoint, strings.NewReader(testdata.Input))
 			require.Less(t, resp.Result().StatusCode, 300)
 			require.GreaterOrEqual(t, resp.Result().StatusCode, 200)
 		})
 	}
-}
-
-func TestMain(m *testing.M) {
-	if err := internal.InitCGroup(); err != nil {
-		panic(errors.Join(errors.New("failed to init cgroup"), err))
-	}
-	code := m.Run()
-	os.Exit(code)
 }
