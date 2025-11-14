@@ -4,20 +4,20 @@ POST: /engine/custom/execute
 {
     "engine": {
         "compile": {
-            "packages": ["nixpkgs/nixos-25.05#zig"],
-            "command": "ZIG_GLOBAL_CACHE_DIR=\"$PWD/cache\" zig cc -target wasm32-wasi main.c -o output.wasm"
+            "packages": ["nixpkgs/nixos-25.05#go"],
+            "command": "GOCACHE=/box GOOS=wasip1 GOARCH=wasm go build -o output.wasm main.go"
         },
         "execute": {
             "packages": ["nixpkgs/nixos-25.05#wasmtime"],
             "command": "wasmtime output.wasm"
         },
         "meta": {
-            "run_file": "main.c"
+            "run_file": "main.go"
         }
     },
     "files": [{
         "name": "@",
-        "content": "#include <stdio.h>\nint main() {printf(\"Hello from C compiled to WASM\");return 0;}"
+        "content": "package main\nimport \"fmt\"\nfunc main() {fmt.Println(\"Hello from Go compiled to WASM\")}"
     }]
 }
 ```
