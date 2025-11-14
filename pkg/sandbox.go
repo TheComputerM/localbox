@@ -38,26 +38,26 @@ func (s Sandbox) metadataFilePath() string {
 }
 
 func (s Sandbox) Init() error {
-	if err := exec.Command(
+	if output, err := exec.Command(
 		Instance().IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--init",
-	).Run(); err != nil {
-		return errors.Join(fmt.Errorf("could not init sandbox %d", s.ID()), err)
+	).CombinedOutput(); err != nil {
+		return errors.Join(fmt.Errorf("could not init sandbox %d: %s", s.ID(), string(output)), err)
 	}
 	slog.Info("Sandbox init", slog.Int("id", s.ID()))
 	return nil
 }
 
 func (s Sandbox) Cleanup() error {
-	if err := exec.Command(
+	if output, err := exec.Command(
 		Instance().IsolateBin,
 		"--cg",
 		"--box-id="+s.String(),
 		"--cleanup",
-	).Run(); err != nil {
-		return errors.Join(fmt.Errorf("could not cleanup sandbox %d", s.ID()), err)
+	).CombinedOutput(); err != nil {
+		return errors.Join(fmt.Errorf("could not cleanup sandbox %d: %s", s.ID(), string(output)), err)
 	}
 	slog.Info("Sandbox cleanup", slog.Int("id", s.ID()))
 	return os.RemoveAll(s.metadataFilePath())
